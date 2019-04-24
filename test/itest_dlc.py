@@ -121,7 +121,7 @@ def run_test(env):
         assert res["Contract"]["OurFundingAmount"] == ourFundingAmount, "SetContractFunding does not works"
         assert res["Contract"]["TheirFundingAmount"] == theirFundingAmount, "SetContractFunding does not works"
 
-        res = lit1.rpc.SetContractDivision(CIdx=contract["Contract"]["Idx"], ValueFullyOurs=20, ValueFullyTheirs=10)
+        res = lit1.rpc.SetContractDivision(CIdx=contract["Contract"]["Idx"], ValueFullyOurs=20000, ValueFullyTheirs=10000)
         assert res["Success"], "SetContractDivision does not works"
 
 
@@ -132,8 +132,16 @@ def run_test(env):
         res = lit1.rpc.OfferContract(CIdx=contract["Contract"]["Idx"], PeerIdx=lit1.get_peer_id(lit2))
         assert res["Success"], "OfferContract does not works"
 
+        time.sleep(6)
+
         res = lit2.rpc.ContractRespond(AcceptOrDecline=True, CIdx=1)
         assert res["Success"], "ContractRespond on lit2 does not works"
+
+        time.sleep(6)
+
+        env.generate_block()
+
+        time.sleep(2)
 
 
         oracle1_val = ""
@@ -161,21 +169,30 @@ def run_test(env):
         b_OracleSig = decode_hex(oracle1_sig)[0]
         OracleSig = [elem for elem in b_OracleSig]
 
-        # Now lets review the contract
 
-        res = lit1.rpc.GetContract(Idx=1)
-        print(res)
-
-        print('---------------')
-
-        # And try to accept it.
 
         res = lit1.rpc.SettleContract(CIdx=contract["Contract"]["Idx"], OracleValue=oracle1_val, OracleSig=OracleSig)
-        print('---------------')
+
+        time.sleep(6)
+
+        print('SettleContract:')
         print(res)
-        
-        # And we got an error: Error: RPC call failed: Division not found in contract
-        # despite the fact that we have a "Division" section in the contract.
+
+        # 
+
+        # env.generate_block()
+        # time.sleep(1)
+
+        # bals1 = lit1.get_balance_info()  
+        # print('new lit1 balance:', bals1['TxoTotal'], 'in txos,', bals1['ChanTotal'], 'in chans')
+        # bal1sum = bals1['TxoTotal'] + bals1['ChanTotal']
+        # print('  = sum ', bal1sum)
+
+        # bals2 = lit2.get_balance_info()
+        # print('new lit2 balance:', bals2['TxoTotal'], 'in txos,', bals2['ChanTotal'], 'in chans')
+        # bal2sum = bals2['TxoTotal'] + bals2['ChanTotal']
+        # print('  = sum ', bal2sum) 
+
         
 
     except BaseException as e:
