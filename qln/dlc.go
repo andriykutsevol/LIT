@@ -117,11 +117,11 @@ func (nd *LitNode) OfferDlc(peerIdx uint32, cIdx uint64) error {
 	}
 
 	wal, _ := nd.SubWallet[c.CoinType]
-	c.OurRevokePKH, err = wal.NewAdr()
+	c.OurRefundPKH, err = wal.NewAdr()
 
 	//fmt.Printf("::%s:: OfferDlc(): qln/dlc.go: c.OurRevokePub %x \n",os.Args[6][len(os.Args[6])-4:], c.OurRevokePub)
 
-	fmt.Printf("::%s:: OfferDlc(): qln/dlc.go: c.OurRevokePKH %x \n",os.Args[6][len(os.Args[6])-4:], c.OurRevokePKH)
+	fmt.Printf("::%s:: OfferDlc(): qln/dlc.go: c.OurRefundPKH %x \n",os.Args[6][len(os.Args[6])-4:], c.OurRefundPKH)
 
 
 	msg := lnutil.NewDlcOfferMsg(peerIdx, c)
@@ -228,7 +228,7 @@ func (nd *LitNode) AcceptDlc(cIdx uint64) error {
 		copy(c.OurPayoutPKH[:], btcutil.Hash160(ourPayoutPKHKey[:]))
 
 		wal, _ := nd.SubWallet[c.CoinType]
-		c.OurRevokePKH, err = wal.NewAdr()
+		c.OurRefundPKH, err = wal.NewAdr()
 
 		// Now we can sign the division
 		sigs, err := nd.SignSettlementDivisions(c)
@@ -296,11 +296,11 @@ func (nd *LitNode) DlcOfferHandler(msg lnutil.DlcOfferMsg, peer *RemotePeer) {
 
 	//c.TheirRevokePub = msg.Contract.OurRevokePub
 
-	c.TheirRevokePKH = msg.Contract.OurRevokePKH
+	c.TheirRefundPKH = msg.Contract.OurRefundPKH
 
 	//fmt.Printf("::%s:: DlcOfferHandler(): qln/dlc.go: c.TheirRevokePub %x \n",os.Args[6][len(os.Args[6])-4:], c.TheirRevokePub)
 
-	fmt.Printf("::%s:: DlcOfferHandler(): qln/dlc.go: c.TheirRevokePKH %x \n",os.Args[6][len(os.Args[6])-4:], c.TheirRevokePKH)
+	fmt.Printf("::%s:: DlcOfferHandler(): qln/dlc.go: c.TheirRefundPKH %x \n",os.Args[6][len(os.Args[6])-4:], c.TheirRefundPKH)
 
 	fmt.Printf("::%s:: DlcOfferHandler(): qln/dlc.go: msg.Contract %+v \n",os.Args[6][len(os.Args[6])-4:], msg.Contract)
 
@@ -365,7 +365,7 @@ func (nd *LitNode) DlcAcceptHandler(msg lnutil.DlcOfferAcceptMsg, peer *RemotePe
 	c.TheirIdx = msg.OurIdx
 
 	//c.TheirRevokePub = msg.OurRevokePub
-	c.TheirRevokePKH = msg.OurRevokePKH
+	c.TheirRefundPKH = msg.OurRefundPKH
 
 	c.TheirrefundTxSig64 = msg.OurrefundTxSig64
 
