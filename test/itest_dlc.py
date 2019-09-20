@@ -9,7 +9,7 @@ import requests # pip3 install requests
 
 import codecs
 
-deb_mod = False
+deb_mod = True
 
 def run_t(env, params):
     global deb_mod
@@ -330,7 +330,7 @@ def run_t(env, params):
         try:
             env.generate_block(1)
             time.sleep(1)
-            env.generate_block(10)
+            env.generate_block(1)
             time.sleep(1)
             env.generate_block(1)
             time.sleep(1)

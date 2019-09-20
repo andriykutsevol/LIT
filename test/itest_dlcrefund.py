@@ -9,7 +9,7 @@ import requests # pip3 install requests
 
 import codecs
 
-deb_mod = False
+deb_mod = True
 
 
 def run_t(env, params):
