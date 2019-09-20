@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"os"
+
 	"github.com/mit-dci/lit/logging"
 
 	"github.com/mit-dci/lit/btcutil/txscript"
@@ -40,6 +42,14 @@ func CommitScript(RKey, TKey [33]byte, delay uint16) []byte {
 
 	// never any errors we care about here.
 	s, _ := builder.Script()
+
+	fmt.Printf("::%s:: !Script: CommitScript(): lnutil/lnlib.go: RKey %x, TKey %x, delay %d \n",os.Args[6][len(os.Args[6])-4:], RKey, TKey, delay)
+
+	parsed, _ := txscript.ParseScript(s)
+	for _, p := range parsed {
+		fmt.Printf("::%s:: CommitScript(): lnutil/lnlib.go: OpCode: %s \n",os.Args[6][len(os.Args[6])-4:], p.Print(false))
+	}		
+
 	return s
 }
 
@@ -64,6 +74,15 @@ func FundTxScript(aPub, bPub [33]byte) ([]byte, bool, error) {
 	bldr.AddOp(txscript.OP_CHECKMULTISIG)
 	// get byte slice
 	pre, err := bldr.Script()
+
+	fmt.Printf("::%s:: !Script: FundTxScript(): lnutil/lnlib.go: swapped %t, apub %x, bpub %x, pre %x \n",os.Args[6][len(os.Args[6])-4:], swapped, aPub, bPub, pre)
+
+	parsed, _ := txscript.ParseScript(pre)
+	for _, p := range parsed {
+		fmt.Printf("::%s:: FundTxScript(): lnutil/lnlib.go: OpCode: %s \n",os.Args[6][len(os.Args[6])-4:], p.Print(false))
+	}
+
+
 	return pre, swapped, err
 }
 
@@ -72,6 +91,9 @@ func FundTxScript(aPub, bPub [33]byte) ([]byte, bool, error) {
 // You don't have to remember the p2sh preimage, as long as you remember the
 // pubkeys involved.
 func FundTxOut(pubA, pubB [33]byte, amt int64) (*wire.TxOut, error) {
+
+	fmt.Printf("::%s:: FundTxOut(): lnutil/lnlib.go pubA %x, pubB %x \n",os.Args[6][len(os.Args[6])-4:], pubA, pubB)
+
 	if amt < 0 {
 		return nil, fmt.Errorf("Can't create FundTx script with negative coins")
 	}
@@ -80,6 +102,8 @@ func FundTxOut(pubA, pubB [33]byte, amt int64) (*wire.TxOut, error) {
 		return nil, err
 	}
 	scriptBytes = P2WSHify(scriptBytes)
+
+	fmt.Printf("::%s:: FundTxOut(): lnutil/lnlib.go scriptBytes %x \n",os.Args[6][len(os.Args[6])-4:], scriptBytes)
 
 	return wire.NewTxOut(amt, scriptBytes), nil
 }
@@ -118,7 +142,15 @@ func ReceiveHTLCScript(revPKH [20]byte, remotePub [33]byte, RHash [32]byte, loca
 	b.AddOp(txscript.OP_ENDIF)
 	b.AddOp(txscript.OP_ENDIF)
 
+	fmt.Printf("::%s:: !Script: ReceiveHTLCScript(): lnutil/lnlib.go: revPKH %x, remotePub %x, RHash %x, localPub %x, locktime %d \n",os.Args[6][len(os.Args[6])-4:], revPKH, remotePub, RHash, localPub, locktime)
+
 	s, _ := b.Script()
+
+	parsed, _ := txscript.ParseScript(s)
+	for _, p := range parsed {
+		fmt.Printf("::%s:: ReceiveHTLCScript(): lnutil/lnlib.go: OpCode: %s \n",os.Args[6][len(os.Args[6])-4:], p.Print(false))
+	}
+
 	return s
 }
 
@@ -153,6 +185,14 @@ func OfferHTLCScript(revPKH [20]byte, remotePub [33]byte, RHash [32]byte, localP
 	b.AddOp(txscript.OP_ENDIF)
 	b.AddOp(txscript.OP_ENDIF)
 
+	fmt.Printf("::%s:: !Script: OfferHTLCScript(): lnutil/lnlib.go: revPKH %x, remotePub %x, RHash %x, localPub %x \n",os.Args[6][len(os.Args[6])-4:], revPKH, remotePub, RHash, localPub)
+
 	s, _ := b.Script()
+
+	parsed, _ := txscript.ParseScript(s)
+	for _, p := range parsed {
+		fmt.Printf("::%s:: OfferHTLCScript(): lnutil/lnlib.go: OpCode: %s \n",os.Args[6][len(os.Args[6])-4:], p.Print(false))
+	}
+
 	return s
 }

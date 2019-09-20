@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
+	
+	"os"
+	"bufio"	
 
 	"github.com/mit-dci/lit/logging"
 
@@ -28,6 +31,8 @@ func (w *Wallit) MaybeSend(txos []*wire.TxOut, ow bool) ([]*wire.OutPoint, error
 	var totalSend int64
 	dustCutoff := consts.DustCutoff // below this amount, just give to miners
 
+	fmt.Printf("::%s:: MaybeSend(): wallit/signsend.go: len(txos) %d \n",os.Args[6][len(os.Args[6])-4:], len(txos))
+
 	feePerByte := w.FeeRate
 
 	// make an initial txo copy so we can find where the outputs end up in final tx
@@ -45,7 +50,17 @@ func (w *Wallit) MaybeSend(txos []*wire.TxOut, ow bool) ([]*wire.OutPoint, error
 	for _, txo := range txos {
 		totalSend += txo.Value
 		outputByteSize += 8 + int64(len(txo.PkScript))
+
+		fmt.Printf("::%s:: MaybeSend(): wallit/signsend.go: totalSend %d, txo.PkScript %x, outputByteSize %d  \n",os.Args[6][len(os.Args[6])-4:], totalSend, txo.PkScript, outputByteSize)
+
+		parsed, _ := txscript.ParseScript(txo.PkScript)
+		for _, p := range parsed {
+			fmt.Printf("::%s:: MaybeSend():txo.PkScript: OpCode: %s \n",os.Args[6][len(os.Args[6])-4:], p.Print(false))
+		}
+
 	}
+
+	fmt.Printf("::%s:: MaybeSend()2: wallit/signsend.go \n",os.Args[6][len(os.Args[6])-4:])
 
 	// start access to utxos
 	w.FreezeMutex.Lock()
@@ -58,6 +73,8 @@ func (w *Wallit) MaybeSend(txos []*wire.TxOut, ow bool) ([]*wire.OutPoint, error
 		return nil, err
 	}
 
+	fmt.Printf("::%s:: MaybeSend()3: wallit/signsend.go \n",os.Args[6][len(os.Args[6])-4:])
+
 	logging.Infof("MaybeSend has overshoot %d, %d inputs\n", overshoot, len(utxos))
 
 	// changeOutSize is the extra vsize that a change output would add
@@ -65,11 +82,14 @@ func (w *Wallit) MaybeSend(txos []*wire.TxOut, ow bool) ([]*wire.OutPoint, error
 
 	// add a change output if we have enough extra to do so
 	if overshoot > dustCutoff+changeOutFee {
+		fmt.Printf("::%s:: MaybeSend(): w.NewChangeOut \n",os.Args[6][len(os.Args[6])-4:])
 		changeOut, err = w.NewChangeOut(overshoot - changeOutFee)
 		if err != nil {
 			return nil, err
 		}
 	}
+
+	fmt.Printf("::%s:: MaybeSend()4: wallit/signsend.go \n",os.Args[6][len(os.Args[6])-4:])
 
 	// build frozen tx for later broadcast
 	fTx := new(FrozenTx)
@@ -86,6 +106,8 @@ func (w *Wallit) MaybeSend(txos []*wire.TxOut, ow bool) ([]*wire.OutPoint, error
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("::%s:: MaybeSend()5: wallit/signsend.go \n",os.Args[6][len(os.Args[6])-4:])
 
 	// after building, store the locktime and txid
 	fTx.Nlock = tx.LockTime
@@ -106,6 +128,8 @@ func (w *Wallit) MaybeSend(txos []*wire.TxOut, ow bool) ([]*wire.OutPoint, error
 			}
 		}
 	}
+
+	fmt.Printf("::%s:: MaybeSend()6: wallit/signsend.go \n",os.Args[6][len(os.Args[6])-4:])
 
 	return finalOutPoints, nil
 }
@@ -138,6 +162,13 @@ func (w *Wallit) ReallySend(txid *chainhash.Hash) error {
 	if err != nil {
 		return err
 	}
+
+	var buft bytes.Buffer
+	wtt := bufio.NewWriter(&buft)
+	tx.Serialize(wtt)
+	wtt.Flush()
+
+	fmt.Printf("::%s:: ReallySend(): wallit/signsend.go: %x \n",os.Args[6][len(os.Args[6])-4:], buft.Bytes())
 
 	return w.NewOutgoingTx(tx)
 }
@@ -446,6 +477,9 @@ func (w *Wallit) SignMyInputs(tx *wire.MsgTx) error {
 
 		// sign into stash.  3 possibilities:  legacy PKH, WPKH, WSH
 		if utxo.Mode == portxo.TxoP2PKHComp { // legacy PKH
+
+			fmt.Printf("::%s:: SingMyinputs(): wallit/signsend.go: utxo.Mode == portxo.TxoP2PKHComp \n",os.Args[6][len(os.Args[6])-4:])
+
 			sigStash[i], err = txscript.SignatureScript(tx, i,
 				utxo.PkScript, txscript.SigHashAll, priv, true)
 			if err != nil {
@@ -453,6 +487,9 @@ func (w *Wallit) SignMyInputs(tx *wire.MsgTx) error {
 			}
 		}
 		if utxo.Mode == portxo.TxoP2WPKHComp { // witness PKH
+
+			fmt.Printf("::%s:: SingMyinputs(): wallit/signsend.go: utxo.Mode == portxo.TxoP2WPKHComp \n",os.Args[6][len(os.Args[6])-4:])
+
 			witStash[i], err = txscript.WitnessScript(tx, hCache, i,
 				utxo.Value, utxo.PkScript, txscript.SigHashAll, priv, true)
 			if err != nil {
@@ -460,11 +497,17 @@ func (w *Wallit) SignMyInputs(tx *wire.MsgTx) error {
 			}
 		}
 		if utxo.Mode == portxo.TxoP2WSHComp { // witness script hash
+
+			fmt.Printf("::%s:: SingMyinputs(): wallit/signsend.go: utxo.Mode == portxo.TxoP2WSHComp \n",os.Args[6][len(os.Args[6])-4:])
+
 			sig, err := txscript.RawTxInWitnessSignature(tx, hCache, i,
 				utxo.Value, utxo.PkScript, txscript.SigHashAll, priv)
 			if err != nil {
 				return err
 			}
+
+			fmt.Printf("::%s:: SingMyinputs(): wallit/signsend.go: txscript.RawTxInWitnessSignature sig %x \n",os.Args[6][len(os.Args[6])-4:], sig)
+			
 			// witness stack has the signature, items, then the previous full script
 			witStash[i] = make([][]byte, 2+len(utxo.PreSigStack))
 
@@ -487,8 +530,12 @@ func (w *Wallit) SignMyInputs(tx *wire.MsgTx) error {
 			txin.SignatureScript = sigStash[i]
 		}
 		if witStash[i] != nil {
+
 			txin.Witness = witStash[i]
 			txin.SignatureScript = nil
+
+			fmt.Printf("::%s:: SingMyinputs(): wallit/signsend.go: txin.Witness %x \n",os.Args[6][len(os.Args[6])-4:], txin.Witness)
+
 		}
 	}
 
@@ -518,10 +565,14 @@ func (w *Wallit) BuildAndSign(
 		if txo == nil || txo.PkScript == nil || txo.Value == 0 {
 			return nil, fmt.Errorf("BuildAndSign arg invalid txo")
 		}
+		fmt.Printf("::%s:: BuildAndSign(): wallit/signsend.go: AddTxOut txo.PkScript %x \n",os.Args[6][len(os.Args[6])-4:], txo.PkScript)
 		tx.AddTxOut(txo)
 	}
 	// add all the txins, first refenecing the prev outPoints
 	for i, u := range utxos {
+
+		fmt.Printf("::%s:: BuildAndSign(): wallit/signsend.go: AddTxIn: u.Op.Index %d, u.Op.Hash %x \n",os.Args[6][len(os.Args[6])-4:], u.Op.Index, u.Op.Hash)
+
 		tx.AddTxIn(wire.NewTxIn(&u.Op, nil, nil))
 		// set sequence field if it's in the portxo
 		if u.Seq > 1 {
@@ -534,6 +585,9 @@ func (w *Wallit) BuildAndSign(
 	w.SignMyInputs(tx)
 
 	logging.Infof("tx: %s", TxToString(tx))
+
+	fmt.Printf("::%s:: BuildAndSign(): TxToString(tx) : wallit/signsend.go: %s \n",os.Args[6][len(os.Args[6])-4:], TxToString(tx))
+
 	return tx, nil
 }
 

@@ -61,6 +61,9 @@ func (mgr *DlcManager) SetContractSettlementTime(cIdx, time uint64) error {
 			" unless the contract is in Draft state")
 	}
 	c.OracleTimestamp = time
+
+	fmt.Printf("c.OracleTimestamp %d \n", c.OracleTimestamp)
+
 	// Reset the R point
 	c.OracleR = [33]byte{}
 	mgr.SaveContract(c)

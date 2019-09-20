@@ -3,6 +3,12 @@ package uspv
 import (
 	"path/filepath"
 
+	"bytes"
+	"bufio"
+
+	"os"
+	"fmt"
+
 	"github.com/mit-dci/lit/logging"
 
 	"github.com/mit-dci/lit/btcutil/chaincfg/chainhash"
@@ -153,7 +159,13 @@ func (s *SPVCon) RegisterAddress(adr160 [20]byte) error {
 // RegisterOutPoint ...
 func (s *SPVCon) RegisterOutPoint(op wire.OutPoint) error {
 	s.TrackingOPsMtx.Lock()
+
+	fmt.Printf("::%s:: RegisterOutPoint(): uspv/chainhook.go: before: len(s.TrackingOPs): %d \n",os.Args[6][len(os.Args[6])-4:], len(s.TrackingOPs))
+
 	s.TrackingOPs[op] = true
+
+	fmt.Printf("::%s:: RegisterOutPoint(): uspv/chainhook.go: after: len(s.TrackingOPs): %d \n",os.Args[6][len(os.Args[6])-4:], len(s.TrackingOPs))
+
 	s.TrackingOPsMtx.Unlock()
 	return nil
 }
@@ -167,6 +179,14 @@ func (s *SPVCon) UnregisterOutPoint(op wire.OutPoint) error {
 
 // PushTx sends a tx out to the global network
 func (s *SPVCon) PushTx(tx *wire.MsgTx) error {
+
+	var buft bytes.Buffer
+	wtt := bufio.NewWriter(&buft)
+	tx.Serialize(wtt)
+	wtt.Flush()
+
+	fmt.Printf("::%s:: PushTx(): uspv/chainhook.go: %x \n",os.Args[6][len(os.Args[6])-4:], buft.Bytes())
+
 	// store tx in the RAM map for when other nodes ask for it
 	txid := tx.TxHash()
 	s.TxMap[txid] = tx
@@ -182,6 +202,9 @@ func (s *SPVCon) PushTx(tx *wire.MsgTx) error {
 		return err
 	}
 	// broadcast inv message
+
+	fmt.Printf("::%s:: PushTx(): uspv/chainhook.go s.outMsgQueue <- invMsg \n",os.Args[6][len(os.Args[6])-4:])
+
 	s.outMsgQueue <- invMsg
 
 	// TODO wait a few seconds here for a reject message and return it
