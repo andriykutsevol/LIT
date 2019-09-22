@@ -94,6 +94,7 @@ def run_t(env, params):
         time.sleep(5)
 
         print("Funding")
+        
         bals1 = lit1.get_balance_info()  
         print('new lit1 balance:', bals1['TxoTotal'], 'in txos,', bals1['ChanTotal'], 'in chans')
         bal1sum = bals1['TxoTotal'] + bals1['ChanTotal']
