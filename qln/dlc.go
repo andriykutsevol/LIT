@@ -314,7 +314,9 @@ func (nd *LitNode) DlcOfferHandler(msg lnutil.DlcOfferMsg, peer *RemotePeer) {
 	c.CoinType = msg.Contract.CoinType
 	c.FeePerByte = msg.Contract.FeePerByte
 	c.OracleA[0] = msg.Contract.OracleA[0]
+	c.OracleA[1] = msg.Contract.OracleA[0]
 	c.OracleR[0] = msg.Contract.OracleR[0]
+	c.OracleR[1] = msg.Contract.OracleR[0]	
 	c.OracleTimestamp = msg.Contract.OracleTimestamp
 	c.RefundTimestamp = msg.Contract.RefundTimestamp
 

@@ -226,6 +226,20 @@ def run_t(env, params):
 
         #------------------------------------------
 
+
+
+        print("=====START CONTRACT N1=====")
+        res = lit1.rpc.ListContracts()
+        #print(pp.pprint(res))
+        print(res)
+        print("=====END CONTRACT N1=====")
+
+        print("=====START CONTRACT N2=====")
+        res = lit2.rpc.ListContracts()
+        #print(pp.pprint(res))
+        print(res)
+        print("=====END CONTRACT N2=====")
+
              
     except BaseException as be:
         raise be 

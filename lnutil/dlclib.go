@@ -124,7 +124,9 @@ func DlcContractFromBytes(b []byte) (*DlcContract, error) {
 	c.TheirIdx = theirIdx
 
 	copy(c.OracleA[0][:], buf.Next(33))
+	copy(c.OracleA[1][:], buf.Next(33))
 	copy(c.OracleR[0][:], buf.Next(33))
+	copy(c.OracleR[1][:], buf.Next(33))	
 
 	peerIdx, err := wire.ReadVarInt(buf, 0)
 	if err != nil {
@@ -274,7 +276,9 @@ func (self *DlcContract) Bytes() []byte {
 	wire.WriteVarInt(&buf, 0, uint64(self.Idx))
 	wire.WriteVarInt(&buf, 0, uint64(self.TheirIdx))
 	buf.Write(self.OracleA[0][:])
+	buf.Write(self.OracleA[1][:])
 	buf.Write(self.OracleR[0][:])
+	buf.Write(self.OracleR[1][:])
 	wire.WriteVarInt(&buf, 0, uint64(self.PeerIdx))
 	wire.WriteVarInt(&buf, 0, uint64(self.CoinType))
 	wire.WriteVarInt(&buf, 0, uint64(self.FeePerByte))
@@ -591,8 +595,7 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 	binary.Write(&buf, binary.BigEndian, uint64(0))
 	binary.Write(&buf, binary.BigEndian, uint64(0))
 	binary.Write(&buf, binary.BigEndian, d.OracleValue)
-	oracleSigPub, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),
-		c.OracleA[0], c.OracleR[0])
+	oracleSigPub, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),c.OracleA[0], c.OracleR[0])
 	if err != nil {
 		return nil, err
 	}

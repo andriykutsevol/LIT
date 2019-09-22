@@ -43,8 +43,10 @@ func (mgr *DlcManager) SetContractOracle(cIdx, oIdx uint64) error {
 		return err
 	}
 	c.OracleA[0] = o.A
+	c.OracleA[1] = o.A
 	// Reset the R point when changing the oracle
 	c.OracleR[0] = [33]byte{}
+	c.OracleR[1] = [33]byte{}		// ?
 	mgr.SaveContract(c)
 	return nil
 }
@@ -66,6 +68,7 @@ func (mgr *DlcManager) SetContractSettlementTime(cIdx, time uint64) error {
 
 	// Reset the R point
 	c.OracleR[0] = [33]byte{}
+	c.OracleR[1] = [33]byte{}
 	mgr.SaveContract(c)
 	return nil
 }
@@ -114,6 +117,7 @@ func (mgr *DlcManager) SetContractDatafeed(cIdx, feed uint64) error {
 	}
 
 	c.OracleR[0], err = o.FetchRPoint(feed, c.OracleTimestamp)
+	c.OracleR[1], err = o.FetchRPoint(feed, c.OracleTimestamp)
 	if err != nil {
 		return err
 	}
@@ -139,6 +143,7 @@ func (mgr *DlcManager) SetContractRPoint(cIdx uint64, rPoint [33]byte) error {
 	}
 
 	c.OracleR[0] = rPoint
+	c.OracleR[1] = rPoint
 
 	err = mgr.SaveContract(c)
 	if err != nil {
