@@ -42,9 +42,9 @@ func (mgr *DlcManager) SetContractOracle(cIdx, oIdx uint64) error {
 	if err != nil {
 		return err
 	}
-	c.OracleA = o.A
+	c.OracleA[0] = o.A
 	// Reset the R point when changing the oracle
-	c.OracleR = [33]byte{}
+	c.OracleR[0] = [33]byte{}
 	mgr.SaveContract(c)
 	return nil
 }
@@ -65,7 +65,7 @@ func (mgr *DlcManager) SetContractSettlementTime(cIdx, time uint64) error {
 	fmt.Printf("c.OracleTimestamp %d \n", c.OracleTimestamp)
 
 	// Reset the R point
-	c.OracleR = [33]byte{}
+	c.OracleR[0] = [33]byte{}
 	mgr.SaveContract(c)
 	return nil
 }
@@ -108,12 +108,12 @@ func (mgr *DlcManager) SetContractDatafeed(cIdx, feed uint64) error {
 			" otherwise no R point can be retrieved for the feed")
 	}
 
-	o, err := mgr.FindOracleByKey(c.OracleA)
+	o, err := mgr.FindOracleByKey(c.OracleA[0])
 	if err != nil {
 		return err
 	}
 
-	c.OracleR, err = o.FetchRPoint(feed, c.OracleTimestamp)
+	c.OracleR[0], err = o.FetchRPoint(feed, c.OracleTimestamp)
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func (mgr *DlcManager) SetContractRPoint(cIdx uint64, rPoint [33]byte) error {
 			" contract is in Draft state")
 	}
 
-	c.OracleR = rPoint
+	c.OracleR[0] = rPoint
 
 	err = mgr.SaveContract(c)
 	if err != nil {

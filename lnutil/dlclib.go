@@ -58,7 +58,7 @@ type DlcContract struct {
 	// Fee per byte
 	FeePerByte uint32
 	// Pub keys of the oracle and the R point used in the contract
-	OracleA, OracleR [33]byte
+	OracleA, OracleR [2][33]byte
 	// The time we expect the oracle to publish
 	OracleTimestamp uint64
 	// The time after which the refund transaction becomes valid.
@@ -123,8 +123,8 @@ func DlcContractFromBytes(b []byte) (*DlcContract, error) {
 	}
 	c.TheirIdx = theirIdx
 
-	copy(c.OracleA[:], buf.Next(33))
-	copy(c.OracleR[:], buf.Next(33))
+	copy(c.OracleA[0][:], buf.Next(33))
+	copy(c.OracleR[0][:], buf.Next(33))
 
 	peerIdx, err := wire.ReadVarInt(buf, 0)
 	if err != nil {
@@ -273,8 +273,8 @@ func (self *DlcContract) Bytes() []byte {
 
 	wire.WriteVarInt(&buf, 0, uint64(self.Idx))
 	wire.WriteVarInt(&buf, 0, uint64(self.TheirIdx))
-	buf.Write(self.OracleA[:])
-	buf.Write(self.OracleR[:])
+	buf.Write(self.OracleA[0][:])
+	buf.Write(self.OracleR[0][:])
 	wire.WriteVarInt(&buf, 0, uint64(self.PeerIdx))
 	wire.WriteVarInt(&buf, 0, uint64(self.CoinType))
 	wire.WriteVarInt(&buf, 0, uint64(self.FeePerByte))
@@ -592,7 +592,7 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 	binary.Write(&buf, binary.BigEndian, uint64(0))
 	binary.Write(&buf, binary.BigEndian, d.OracleValue)
 	oracleSigPub, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),
-		c.OracleA, c.OracleR)
+		c.OracleA[0], c.OracleR[0])
 	if err != nil {
 		return nil, err
 	}

@@ -1067,10 +1067,10 @@ func PrintContract(c *lnutil.DlcContract) {
 	fmt.Fprintf(color.Output, "%-30s : %d\n", lnutil.White("Index"), c.Idx)
 	fmt.Fprintf(color.Output, "%-30s : [%x...%x...%x]\n",
 		lnutil.White("Oracle public key"),
-		c.OracleA[:2], c.OracleA[15:16], c.OracleA[31:])
+		c.OracleA[0][:2], c.OracleA[0][15:16], c.OracleA[0][31:])
 	fmt.Fprintf(color.Output, "%-30s : [%x...%x...%x]\n",
 		lnutil.White("Oracle R-point"), c.OracleR[:2],
-		c.OracleR[15:16], c.OracleR[31:])
+		c.OracleR[0][15:16], c.OracleR[0][31:])
 	fmt.Fprintf(color.Output, "%-30s : %s\n",
 		lnutil.White("Settlement time"),
 		time.Unix(int64(c.OracleTimestamp), 0).UTC().Format(time.UnixDate))

@@ -46,11 +46,11 @@ func (nd *LitNode) OfferDlc(peerIdx uint32, cIdx uint64) error {
 
 	var nullBytes [33]byte
 	// Check if everything's set
-	if c.OracleA == nullBytes {
+	if c.OracleA[0] == nullBytes {
 		return fmt.Errorf("You need to set an oracle for the contract before offering it")
 	}
 
-	if c.OracleR == nullBytes {
+	if c.OracleR[0] == nullBytes {
 		return fmt.Errorf("You need to set an R-point for the contract before offering it")
 	}
 
@@ -313,8 +313,8 @@ func (nd *LitNode) DlcOfferHandler(msg lnutil.DlcOfferMsg, peer *RemotePeer) {
 	// Copy
 	c.CoinType = msg.Contract.CoinType
 	c.FeePerByte = msg.Contract.FeePerByte
-	c.OracleA = msg.Contract.OracleA
-	c.OracleR = msg.Contract.OracleR
+	c.OracleA[0] = msg.Contract.OracleA[0]
+	c.OracleR[0] = msg.Contract.OracleR[0]
 	c.OracleTimestamp = msg.Contract.OracleTimestamp
 	c.RefundTimestamp = msg.Contract.RefundTimestamp
 
