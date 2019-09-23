@@ -384,7 +384,10 @@ func PrintTx(tx *wire.MsgTx) {
 // DlcOutput returns a Txo for a particular value that pays to
 // (PubKeyPeer+PubKeyOracleSig or (OurPubKey and TimeDelay))
 func DlcOutput(pkPeer, pkOracleSig, pkOurs [33]byte, value int64) *wire.TxOut {
-	scriptBytes := DlcCommitScript(pkPeer, pkOracleSig, pkOurs, 5)
+	
+	pkOracleSig0 := pkOracleSig
+	pkOracleSig1 := pkOracleSig
+	scriptBytes := DlcCommitScript(pkPeer, pkOracleSig0, pkOracleSig1, pkOurs, 5)
 	scriptBytes = P2WSHify(scriptBytes)
 
 	return wire.NewTxOut(value, scriptBytes)
@@ -396,11 +399,12 @@ func DlcOutput(pkPeer, pkOracleSig, pkOurs [33]byte, value int64) *wire.TxOut {
 // signature and their own private key to claim the funds from the output.
 // However, if they send the wrong one, they won't be able to claim the funds
 // and we can claim them once the time delay has passed.
-func DlcCommitScript(pubKeyPeer, pubKeyOracleSig, ourPubKey [33]byte, delay uint16) []byte {
+func DlcCommitScript(pubKeyPeer, pubKeyOracleSig0, pubKeyOracleSig1, ourPubKey [33]byte, delay uint16) []byte {
 	// Combine pubKey and Oracle Sig
-	combinedPubKey := CombinePubs(pubKeyPeer, pubKeyOracleSig)
+	combinedPubKey := CombinePubs(pubKeyPeer, pubKeyOracleSig0)
+	combinedPubKey = CombinePubs(combinedPubKey, pubKeyOracleSig1)
 
-	fmt.Printf("::%s:: DlcCommitScript(): lnutil/dlclib.go: combinedPubKey %x < -pubKeyPeer %x + pubKeyOracleSig %x, ourPubKey %x, delay %d  \n",os.Args[6][len(os.Args[6])-4:], combinedPubKey, pubKeyPeer, pubKeyOracleSig, ourPubKey, delay)
+	fmt.Printf("::%s:: DlcCommitScript(): lnutil/dlclib.go: combinedPubKey %x < -pubKeyPeer %x + pubKeyOracleSig0 %x + pubKeyOracleSig1 %x, ourPubKey %x, delay %d  \n",os.Args[6][len(os.Args[6])-4:], combinedPubKey, pubKeyPeer, pubKeyOracleSig0, pubKeyOracleSig1, ourPubKey, delay)
 
 	return CommitScript(combinedPubKey, ourPubKey, delay)
 }

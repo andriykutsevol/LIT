@@ -851,14 +851,16 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oracleSig [32]
 
 		pubSpend := wal.GetPub(kg)
 		privOracle, pubOracle := koblitz.PrivKeyFromBytes(koblitz.S256(), oracleSig[:])
+
 		privContractOutput := lnutil.CombinePrivateKeys(privSpend, privOracle)
+		privContractOutput = lnutil.CombinePrivateKeys(privContractOutput, privOracle)
 
 		var pubOracleBytes [33]byte
 		copy(pubOracleBytes[:], pubOracle.SerializeCompressed())
 		var pubSpendBytes [33]byte
 		copy(pubSpendBytes[:], pubSpend.SerializeCompressed())
 
-		settleScript := lnutil.DlcCommitScript(c.OurPayoutBase, pubOracleBytes, c.TheirPayoutBase, 5)
+		settleScript := lnutil.DlcCommitScript(c.OurPayoutBase, pubOracleBytes, pubOracleBytes, c.TheirPayoutBase, 5)
 		err = nd.SignClaimTx(txClaim, settleTx.TxOut[0].Value, settleScript, privContractOutput, false)
 		if err != nil {
 			logging.Errorf("SettleContract SignClaimTx err %s", err.Error())

@@ -27,7 +27,7 @@
 # DLC subsystem tx sizes calculation, etc...
 
 # regular contract
-#dlc 2 t_11_0
+dlc 2 t_11_0
 
 # large contract to test updeted messaging subsystem
 # and also to test settlement from counterparty
@@ -48,4 +48,4 @@
 #dlcrefund 2 forward
 #dlcrefund 2 reverse
 
-dlcoracles 2
+#dlcoracles 2
