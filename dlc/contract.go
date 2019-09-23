@@ -28,7 +28,7 @@ func (mgr *DlcManager) AddContract() (*lnutil.DlcContract, error) {
 // SetContractOracle assigns a particular oracle to a contract - used for
 // determining which pubkey A to use and can also allow for fetching R-points
 // automatically when the oracle was imported from a REST api
-func (mgr *DlcManager) SetContractOracle(cIdx, oIdx uint64) error {
+func (mgr *DlcManager) SetContractOracle(cIdx, oIdx0, oIdx1 uint64) error {
 
 	c, err := mgr.LoadContract(cIdx)
 	if err != nil {
@@ -38,14 +38,19 @@ func (mgr *DlcManager) SetContractOracle(cIdx, oIdx uint64) error {
 		return fmt.Errorf("You cannot change or set the oracle unless the" +
 			" contract is in Draft state")
 	}
-	o, err := mgr.LoadOracle(oIdx)
+	o, err := mgr.LoadOracle(oIdx0)
 	if err != nil {
 		return err
 	}
 	c.OracleA[0] = o.A
+	c.OracleR[0] = [33]byte{}	// Reset the R point when changing the oracle
+
+	o, err = mgr.LoadOracle(oIdx1)
+	if err != nil {
+		return err
+	}
+
 	c.OracleA[1] = o.A
-	// Reset the R point when changing the oracle
-	c.OracleR[0] = [33]byte{}
 	c.OracleR[1] = [33]byte{}		// ?
 	mgr.SaveContract(c)
 	return nil
@@ -131,7 +136,7 @@ func (mgr *DlcManager) SetContractDatafeed(cIdx, feed uint64) error {
 
 // SetContractRPoint allows you to manually set the R-point key if an oracle is
 // not imported from a REST API
-func (mgr *DlcManager) SetContractRPoint(cIdx uint64, rPoint [33]byte) error {
+func (mgr *DlcManager) SetContractRPoint(cIdx uint64, rPoint [2][33]byte) error {
 	c, err := mgr.LoadContract(cIdx)
 	if err != nil {
 		return err
@@ -142,8 +147,8 @@ func (mgr *DlcManager) SetContractRPoint(cIdx uint64, rPoint [33]byte) error {
 			" contract is in Draft state")
 	}
 
-	c.OracleR[0] = rPoint
-	c.OracleR[1] = rPoint
+	c.OracleR[0] = rPoint[0]
+	c.OracleR[1] = rPoint[1]
 
 	err = mgr.SaveContract(c)
 	if err != nil {

@@ -143,7 +143,7 @@ func (r *LitRPC) GetContract(args GetContractArgs,
 
 type SetContractOracleArgs struct {
 	CIdx uint64
-	OIdx uint64
+	OIdx [2]uint64
 }
 
 type SetContractOracleReply struct {
@@ -155,7 +155,7 @@ func (r *LitRPC) SetContractOracle(args SetContractOracleArgs,
 	reply *SetContractOracleReply) error {
 	var err error
 
-	err = r.Node.DlcManager.SetContractOracle(args.CIdx, args.OIdx)
+	err = r.Node.DlcManager.SetContractOracle(args.CIdx, args.OIdx[0], args.OIdx[1])
 	if err != nil {
 		return err
 	}
@@ -190,7 +190,7 @@ func (r *LitRPC) SetContractDatafeed(args SetContractDatafeedArgs,
 
 type SetContractRPointArgs struct {
 	CIdx   uint64
-	RPoint [33]byte
+	RPoint [2][33]byte
 }
 
 type SetContractRPointReply struct {
@@ -450,7 +450,7 @@ func (r *LitRPC) ContractRespond(args ContractRespondArgs, reply *ContractRespon
 type SettleContractArgs struct {
 	CIdx        uint64
 	OracleValue int64
-	OracleSig   [32]byte
+	OracleSig   [2][32]byte
 }
 
 type SettleContractReply struct {
@@ -467,7 +467,7 @@ func (r *LitRPC) SettleContract(args SettleContractArgs,
 	var err error
 
 	reply.SettleTxHash, reply.ClaimTxHash, err = r.Node.SettleContract(
-		args.CIdx, args.OracleValue, args.OracleSig)
+		args.CIdx, args.OracleValue, args.OracleSig[0], args.OracleSig[1])
 	if err != nil {
 		return err
 	}

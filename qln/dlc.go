@@ -727,9 +727,9 @@ func (nd *LitNode) FundContract(c *lnutil.DlcContract) error {
 	return nil
 }
 
-func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oracleSig0 [32]byte) ([32]byte, [32]byte, error) {
+func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oracleSig0, oracleSig1 [32]byte) ([32]byte, [32]byte, error) {
 
-	oracleSig1 := oracleSig0
+	//oracleSig1 := oracleSig0
 
 	c, err := nd.DlcManager.LoadContract(cIdx)
 	if err != nil {

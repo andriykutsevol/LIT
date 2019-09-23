@@ -40,8 +40,10 @@ def run_t(env, params):
         #------------
 
         env.new_oracle(1, oracle_value) # publishing interval is 1 second.
+        env.new_oracle(1, oracle_value) # publishing interval is 1 second.
 
         oracle1 = env.oracles[0]
+        oracle2 = env.oracles[1]
 
         time.sleep(2)
 
@@ -94,7 +96,7 @@ def run_t(env, params):
         time.sleep(5)
 
         print("Funding")
-        
+
         bals1 = lit1.get_balance_info()  
         print('new lit1 balance:', bals1['TxoTotal'], 'in txos,', bals1['ChanTotal'], 'in chans')
         bal1sum = bals1['TxoTotal'] + bals1['ChanTotal']
@@ -140,15 +142,23 @@ def run_t(env, params):
         
         oracle1_pubkey = json.loads(oracle1.get_pubkey())
         assert len(oracle1_pubkey["A"]) == 66, "Wrong oracle1 pub key"
+
+        oracle2_pubkey = json.loads(oracle2.get_pubkey())
+
+        print("oracle1_pubkey: " + str(oracle1_pubkey))
+        print("oracle2_pubkey: " + str(oracle2_pubkey))
         
         oracle_res1 = lit1.rpc.AddOracle(Key=oracle1_pubkey["A"], Name="oracle1")
         assert oracle_res1["Oracle"]["Idx"] == 1, "AddOracle does not works"
 
+        oracle_res2 = lit1.rpc.AddOracle(Key=oracle2_pubkey["A"], Name="oracle2")
+
         res = lit1.rpc.ListOracles(ListOraclesArgs={})
-        assert len(res["Oracles"]) == 1, "ListOracles 1 does not works"
+        assert len(res["Oracles"]) == 2, "ListOracles 1 does not works"
 
 
         lit2.rpc.AddOracle(Key=oracle1_pubkey["A"], Name="oracle1")
+        lit2.rpc.AddOracle(Key=oracle2_pubkey["A"], Name="oracle2")
 
 
         #------------
@@ -165,7 +175,7 @@ def run_t(env, params):
         assert res["Contract"]["Idx"] == 1, "GetContract does not works"
                 
 
-        res = lit1.rpc.SetContractOracle(CIdx=contract["Contract"]["Idx"], OIdx=oracle_res1["Oracle"]["Idx"])
+        res = lit1.rpc.SetContractOracle(CIdx=contract["Contract"]["Idx"], OIdx=[oracle_res1["Oracle"]["Idx"], oracle_res1["Oracle"]["Idx"]])
         assert res["Success"], "SetContractOracle does not works"
 
         datasources = json.loads(oracle1.get_datasources())
@@ -190,12 +200,17 @@ def run_t(env, params):
         assert res["Contracts"][contract["Contract"]["Idx"] - 1]["OracleTimestamp"] == settlement_time, "SetContractSettlementTime does not match settlement_time"
 
         rpoint1 = oracle1.get_rpoint(datasources[0]["id"], settlement_time)
+        rpoint2 = oracle2.get_rpoint(datasources[0]["id"], settlement_time)
 
         decode_hex = codecs.getdecoder("hex_codec")
         b_RPoint = decode_hex(json.loads(rpoint1)['R'])[0]
-        RPoint = [elem for elem in b_RPoint]
+        RPoint0 = [elem for elem in b_RPoint]
 
-        res = lit1.rpc.SetContractRPoint(CIdx=contract["Contract"]["Idx"], RPoint=RPoint)
+
+        b_RPoint = decode_hex(json.loads(rpoint2)['R'])[0]
+        RPoint1 = [elem for elem in b_RPoint]        
+
+        res = lit1.rpc.SetContractRPoint(CIdx=contract["Contract"]["Idx"], RPoint=[RPoint0, RPoint0])
         assert res["Success"], "SetContractRpoint does not works"
 
         lit1.rpc.SetContractCoinType(CIdx=contract["Contract"]["Idx"], CoinType = 257)
@@ -296,30 +311,43 @@ def run_t(env, params):
 
         i = 0
         while True:
-            res = oracle1.get_publication(json.loads(rpoint1)['R'])
+            res1 = oracle1.get_publication(json.loads(rpoint1)['R'])
+            res2 = oracle2.get_publication(json.loads(rpoint2)['R'])
             time.sleep(5)
             i += 1
             if i>4:
                 assert False, "Error: Oracle does not publish data"
             
             try:
-                oracle1_val = json.loads(res)["value"]
-                oracle1_sig = json.loads(res)["signature"]
+                oracle1_val = json.loads(res1)["value"]
+                oracle1_sig = json.loads(res1)["signature"]
+
+                oracle2_val = json.loads(res2)["value"]
+                oracle2_sig = json.loads(res2)["signature"]
+
                 break
             except BaseException as e:
                 print(e)
                 next
 
 
-        b_OracleSig = decode_hex(oracle1_sig)[0]
-        OracleSig = [elem for elem in b_OracleSig]
+        time.sleep(2)
 
+       
+
+
+        b_OracleSig0 = decode_hex(oracle1_sig)[0]
+        OracleSig0 = [elem for elem in b_OracleSig0]
+
+
+        b_OracleSig1 = decode_hex(oracle2_sig)[0]
+        OracleSig1 = [elem for elem in b_OracleSig1]
 
         print("Before SettleContract")
         time.sleep(5)
 
 
-        res = env.lits[node_to_settle].rpc.SettleContract(CIdx=contract["Contract"]["Idx"], OracleValue=oracle1_val, OracleSig=OracleSig)
+        res = env.lits[node_to_settle].rpc.SettleContract(CIdx=contract["Contract"]["Idx"], OracleValue=oracle1_val, OracleSig=[OracleSig0, OracleSig0])
         assert res["Success"], "SettleContract does not works."
 
         time.sleep(5)
