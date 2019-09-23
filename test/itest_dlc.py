@@ -175,7 +175,7 @@ def run_t(env, params):
         assert res["Contract"]["Idx"] == 1, "GetContract does not works"
                 
 
-        res = lit1.rpc.SetContractOracle(CIdx=contract["Contract"]["Idx"], OIdx=[oracle_res1["Oracle"]["Idx"], oracle_res1["Oracle"]["Idx"]])
+        res = lit1.rpc.SetContractOracle(CIdx=contract["Contract"]["Idx"], OIdx=[oracle_res2["Oracle"]["Idx"], oracle_res2["Oracle"]["Idx"]])
         assert res["Success"], "SetContractOracle does not works"
 
         datasources = json.loads(oracle1.get_datasources())
@@ -210,7 +210,7 @@ def run_t(env, params):
         b_RPoint = decode_hex(json.loads(rpoint2)['R'])[0]
         RPoint1 = [elem for elem in b_RPoint]        
 
-        res = lit1.rpc.SetContractRPoint(CIdx=contract["Contract"]["Idx"], RPoint=[RPoint0, RPoint0])
+        res = lit1.rpc.SetContractRPoint(CIdx=contract["Contract"]["Idx"], RPoint=[RPoint1, RPoint1])
         assert res["Success"], "SetContractRpoint does not works"
 
         lit1.rpc.SetContractCoinType(CIdx=contract["Contract"]["Idx"], CoinType = 257)
@@ -347,7 +347,7 @@ def run_t(env, params):
         time.sleep(5)
 
 
-        res = env.lits[node_to_settle].rpc.SettleContract(CIdx=contract["Contract"]["Idx"], OracleValue=oracle1_val, OracleSig=[OracleSig0, OracleSig0])
+        res = env.lits[node_to_settle].rpc.SettleContract(CIdx=contract["Contract"]["Idx"], OracleValue=oracle1_val, OracleSig=[OracleSig1, OracleSig1])
         assert res["Success"], "SettleContract does not works."
 
         time.sleep(5)
