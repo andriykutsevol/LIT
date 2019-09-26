@@ -346,8 +346,8 @@ def run_t(env, params):
 
         i = 0
         while True:
-            res1 = oracle1.get_publication(json.loads(rpoint1)['R'])
-            res2 = oracle2.get_publication(json.loads(rpoint2)['R'])
+            res1 = oracle1.get_publication(json.loads(rpoint0)['R'])
+            res2 = oracle2.get_publication(json.loads(rpoint1)['R'])
             time.sleep(5)
             i += 1
             if i>4:

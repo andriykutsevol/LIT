@@ -383,10 +383,8 @@ func PrintTx(tx *wire.MsgTx) {
 
 // DlcOutput returns a Txo for a particular value that pays to
 // (PubKeyPeer+PubKeyOracleSig or (OurPubKey and TimeDelay))
-func DlcOutput(pkPeer, pkOracleSig, pkOurs [33]byte, value int64) *wire.TxOut {
+func DlcOutput(pkPeer, pkOracleSig0, pkOracleSig1, pkOurs [33]byte, value int64) *wire.TxOut {
 	
-	pkOracleSig0 := pkOracleSig
-	pkOracleSig1 := pkOracleSig
 	scriptBytes := DlcCommitScript(pkPeer, pkOracleSig0, pkOracleSig1, pkOurs, 5)
 	scriptBytes = P2WSHify(scriptBytes)
 
@@ -599,7 +597,8 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 	binary.Write(&buf, binary.BigEndian, uint64(0))
 	binary.Write(&buf, binary.BigEndian, uint64(0))
 	binary.Write(&buf, binary.BigEndian, d.OracleValue)
-	oracleSigPub, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),c.OracleA[0], c.OracleR[0])
+	oracleSigPub0, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),c.OracleA[0], c.OracleR[0])
+	oracleSigPub1, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),c.OracleA[1], c.OracleR[1])
 	if err != nil {
 		return nil, err
 	}
@@ -608,7 +607,7 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 	// generated, so we can use their sigs
 	if ours {
 		if valueTheirs > 0 {
-			tx.AddTxOut(DlcOutput(c.TheirPayoutBase, oracleSigPub,
+			tx.AddTxOut(DlcOutput(c.TheirPayoutBase, oracleSigPub0, oracleSigPub1,
 				c.OurPayoutBase, valueTheirs))
 		}
 
@@ -618,7 +617,7 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 		}
 	} else {
 		if valueOurs > 0 {
-			tx.AddTxOut(DlcOutput(c.OurPayoutBase, oracleSigPub,
+			tx.AddTxOut(DlcOutput(c.OurPayoutBase, oracleSigPub0, oracleSigPub1,
 				c.TheirPayoutBase, valueOurs))
 		}
 
