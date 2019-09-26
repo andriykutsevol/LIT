@@ -43,6 +43,9 @@ func (mgr *DlcManager) SetContractOracle(cIdx, oIdx0, oIdx1 uint64) error {
 		return err
 	}
 	c.OracleA[0] = o.A
+
+	fmt.Printf("c.Oracle[0]: %x \n", c.OracleA[0])
+
 	c.OracleR[0] = [33]byte{}	// Reset the R point when changing the oracle
 
 	o, err = mgr.LoadOracle(oIdx1)
@@ -51,6 +54,9 @@ func (mgr *DlcManager) SetContractOracle(cIdx, oIdx0, oIdx1 uint64) error {
 	}
 
 	c.OracleA[1] = o.A
+
+	fmt.Printf("c.Oracle[1]: %x \n", c.OracleA[1])
+
 	c.OracleR[1] = [33]byte{}		// ?
 	mgr.SaveContract(c)
 	return nil

@@ -138,23 +138,16 @@ def run_t(env, params):
         #------------
 
         res = lit1.rpc.ListOracles()
-        assert len(res) != 0, "Initial lis of oracles must be empty"
+
         
         oracle1_pubkey = json.loads(oracle1.get_pubkey())
-        assert len(oracle1_pubkey["A"]) == 66, "Wrong oracle1 pub key"
-
         oracle2_pubkey = json.loads(oracle2.get_pubkey())
 
         print("oracle1_pubkey: " + str(oracle1_pubkey))
         print("oracle2_pubkey: " + str(oracle2_pubkey))
         
         oracle_res1 = lit1.rpc.AddOracle(Key=oracle1_pubkey["A"], Name="oracle1")
-        assert oracle_res1["Oracle"]["Idx"] == 1, "AddOracle does not works"
-
         oracle_res2 = lit1.rpc.AddOracle(Key=oracle2_pubkey["A"], Name="oracle2")
-
-        res = lit1.rpc.ListOracles(ListOraclesArgs={})
-        assert len(res["Oracles"]) == 2, "ListOracles 1 does not works"
 
 
         lit2.rpc.AddOracle(Key=oracle1_pubkey["A"], Name="oracle1")
@@ -173,12 +166,33 @@ def run_t(env, params):
 
         res = lit1.rpc.GetContract(Idx=1)
         assert res["Contract"]["Idx"] == 1, "GetContract does not works"
-                
 
-        res = lit1.rpc.SetContractOracle(CIdx=contract["Contract"]["Idx"], OIdx=[oracle_res2["Oracle"]["Idx"], oracle_res2["Oracle"]["Idx"]])
+
+
+        
+        
+        #==========================================================
+        #==========================================================
+        #==========================================================
+
+
+        res = lit1.rpc.SetContractOracle(CIdx=contract["Contract"]["Idx"], OIdx=[oracle_res1["Oracle"]["Idx"], oracle_res2["Oracle"]["Idx"]])
         assert res["Success"], "SetContractOracle does not works"
 
-        datasources = json.loads(oracle1.get_datasources())
+
+
+        #==========================================================
+        #==========================================================
+        #==========================================================
+
+
+
+
+        datasources0 = json.loads(oracle1.get_datasources())
+        datasources1 = json.loads(oracle2.get_datasources())
+
+        print("datasources0: " + str(datasources0))
+        print("datasources1: " + str(datasources0))
 
         # Since the oracle publishes data every 1 second (we set this time above), 
         # we increase the time for a point by 3 seconds.
@@ -199,19 +213,40 @@ def run_t(env, params):
         res = lit1.rpc.ListContracts()
         assert res["Contracts"][contract["Contract"]["Idx"] - 1]["OracleTimestamp"] == settlement_time, "SetContractSettlementTime does not match settlement_time"
 
-        rpoint1 = oracle1.get_rpoint(datasources[0]["id"], settlement_time)
-        rpoint2 = oracle2.get_rpoint(datasources[0]["id"], settlement_time)
+        rpoint0 = oracle1.get_rpoint(datasources0[0]["id"], settlement_time)
+        rpoint1 = oracle2.get_rpoint(datasources1[0]["id"], settlement_time)
+
+        print("rpoint0: " + str(rpoint0))
+        print("rpoint1: " + str(rpoint1))
 
         decode_hex = codecs.getdecoder("hex_codec")
-        b_RPoint = decode_hex(json.loads(rpoint1)['R'])[0]
+        b_RPoint = decode_hex(json.loads(rpoint0)['R'])[0]
         RPoint0 = [elem for elem in b_RPoint]
 
 
-        b_RPoint = decode_hex(json.loads(rpoint2)['R'])[0]
-        RPoint1 = [elem for elem in b_RPoint]        
+        b_RPoint = decode_hex(json.loads(rpoint1)['R'])[0]
+        RPoint1 = [elem for elem in b_RPoint]  
 
-        res = lit1.rpc.SetContractRPoint(CIdx=contract["Contract"]["Idx"], RPoint=[RPoint1, RPoint1])
+
+
+
+        #==========================================================
+        #==========================================================
+        #==========================================================
+
+        print("RPoint0: " + str(RPoint0))
+        print("RPoint1: " + str(RPoint1))              
+
+        res = lit1.rpc.SetContractRPoint(CIdx=contract["Contract"]["Idx"], RPoint=[RPoint0, RPoint1])
         assert res["Success"], "SetContractRpoint does not works"
+
+
+        #==========================================================
+        #==========================================================
+        #==========================================================
+
+
+
 
         lit1.rpc.SetContractCoinType(CIdx=contract["Contract"]["Idx"], CoinType = 257)
         res = lit1.rpc.GetContract(Idx=contract["Contract"]["Idx"])
@@ -347,8 +382,24 @@ def run_t(env, params):
         time.sleep(5)
 
 
-        res = env.lits[node_to_settle].rpc.SettleContract(CIdx=contract["Contract"]["Idx"], OracleValue=oracle1_val, OracleSig=[OracleSig1, OracleSig1])
+
+
+
+        #==========================================================
+        #==========================================================
+        #==========================================================
+
+        res = env.lits[node_to_settle].rpc.SettleContract(CIdx=contract["Contract"]["Idx"], OracleValue=oracle1_val, OracleSig=[OracleSig0, OracleSig1])
         assert res["Success"], "SettleContract does not works."
+
+
+        #==========================================================
+        #==========================================================
+        #==========================================================
+
+
+
+
 
         time.sleep(5)
 
@@ -411,6 +462,35 @@ def run_t(env, params):
         
         print("AFter Settle")
 
+
+        #------------------------------------------
+        if deb_mod:
+            print("ADDRESSES AFTER SETTLE")
+            print("LIT1 Addresses")
+            print(pp.pprint(lit1.rpc.GetAddresses()))
+
+            print("LIT2 Addresses")
+            print(pp.pprint(lit2.rpc.GetAddresses()))
+
+            print("bitcoind Addresses")
+            print(pp.pprint(bc.rpc.listaddressgroupings()))
+            #------------------------------------------   
+
+    
+    
+            print("=====START CONTRACT N1=====")
+            res = lit1.rpc.ListContracts()
+            #print(pp.pprint(res))
+            print(res)
+            print("=====END CONTRACT N1=====")
+
+            print("=====START CONTRACT N2=====")
+            res = lit2.rpc.ListContracts()
+            #print(pp.pprint(res))
+            print(res)
+            print("=====END CONTRACT N2=====")
+
+
         print("ORACLE VALUE:", oracle1_val, "; oracle signature:", oracle1_sig)
 
         valueOurs = 0 
@@ -466,34 +546,6 @@ def run_t(env, params):
             assert bal2sum == lit1_bal_result, "The resulting lit2 node balance does not match." 
 
 
-        #------------------------------------------
-        if deb_mod:
-            print("ADDRESSES AFTER SETTLE")
-            print("LIT1 Addresses")
-            print(pp.pprint(lit1.rpc.GetAddresses()))
-
-            print("LIT2 Addresses")
-            print(pp.pprint(lit2.rpc.GetAddresses()))
-
-            print("bitcoind Addresses")
-            print(pp.pprint(bc.rpc.listaddressgroupings()))
-            #------------------------------------------   
-
-    
-    
-            print("=====START CONTRACT N1=====")
-            res = lit1.rpc.ListContracts()
-            #print(pp.pprint(res))
-            print(res)
-            print("=====END CONTRACT N1=====")
-
-            print("=====START CONTRACT N2=====")
-            res = lit2.rpc.ListContracts()
-            #print(pp.pprint(res))
-            print(res)
-            print("=====END CONTRACT N2=====")
-        
-        
 
     except BaseException as be:
         raise be  
