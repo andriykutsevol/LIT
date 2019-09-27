@@ -143,7 +143,7 @@ func (r *LitRPC) GetContract(args GetContractArgs,
 
 type SetContractOracleArgs struct {
 	CIdx uint64
-	OIdx [2]uint64
+	OIdx []uint64
 }
 
 type SetContractOracleReply struct {
@@ -155,7 +155,7 @@ func (r *LitRPC) SetContractOracle(args SetContractOracleArgs,
 	reply *SetContractOracleReply) error {
 	var err error
 
-	err = r.Node.DlcManager.SetContractOracle(args.CIdx, args.OIdx[0], args.OIdx[1])
+	err = r.Node.DlcManager.SetContractOracle(args.CIdx, args.OIdx)
 	if err != nil {
 		return err
 	}
@@ -343,6 +343,7 @@ type SetContractFeePerByteReply struct {
 	Success bool
 }
 
+
 // SetContractFeePerByte sets the fee per byte for the contract.
 func (r *LitRPC) SetContractFeePerByte(args SetContractFeePerByteArgs,
 	reply *SetContractFeePerByteReply) error {
@@ -357,7 +358,30 @@ func (r *LitRPC) SetContractFeePerByte(args SetContractFeePerByteArgs,
 	return nil
 }
 
-//----------------------------------------------------------
+
+
+type SetContractOraclesNumberArgs struct {
+	CIdx     uint64
+	OraclesNumber uint32
+}
+
+type SetContractOraclesNumberReply struct {
+	Success bool
+}
+
+
+func (r *LitRPC) SetContractOraclesNumber(args SetContractOraclesNumberArgs,
+	reply *SetContractOraclesNumberReply) error {
+	var err error
+
+	err = r.Node.DlcManager.SetContractOraclesNumber(args.CIdx, args.OraclesNumber)
+	if err != nil {
+		return err
+	}
+
+	reply.Success = true
+	return nil
+}
 
 type GetContractDivisionArgs struct {
 	CIdx     uint64
@@ -450,7 +474,7 @@ func (r *LitRPC) ContractRespond(args ContractRespondArgs, reply *ContractRespon
 type SettleContractArgs struct {
 	CIdx        uint64
 	OracleValue int64
-	OracleSig   [2][32]byte
+	OracleSig   [8][32]byte
 }
 
 type SettleContractReply struct {

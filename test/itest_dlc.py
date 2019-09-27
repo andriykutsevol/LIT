@@ -176,8 +176,25 @@ def run_t(env, params):
         #==========================================================
 
 
+        res = lit1.rpc.SetContractOraclesNumber(CIdx=contract["Contract"]["Idx"], OraclesNumber=2)
+        assert res["Success"], "SetContractOraclesNumber does not works"
+
         res = lit1.rpc.SetContractOracle(CIdx=contract["Contract"]["Idx"], OIdx=[oracle_res1["Oracle"]["Idx"], oracle_res2["Oracle"]["Idx"]])
         assert res["Success"], "SetContractOracle does not works"
+
+        time.sleep(1)
+
+        print("=====START CONTRACT N1=====")
+        res = lit1.rpc.ListContracts()
+        #print(pp.pprint(res))
+        print(res)
+        print("=====END CONTRACT N1=====")
+
+        print("=====START CONTRACT N2=====")
+        res = lit2.rpc.ListContracts()
+        #print(pp.pprint(res))
+        print(res)
+        print("=====END CONTRACT N2=====")
 
 
 

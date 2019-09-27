@@ -84,7 +84,7 @@ func ParsePubKey(pubKeyStr []byte, curve *KoblitzCurve) (key *PublicKey, err err
 		}
 	case PubKeyBytesLenCompressed:
 
-		fmt.Println("koblitz/pubkey.go: PubKeyBytesLenCompressed")
+		//fmt.Println("koblitz/pubkey.go: PubKeyBytesLenCompressed")
 
 		// format is 0x2 | solution, <X coordinate>
 		// solution determines which solution of the curve we use.

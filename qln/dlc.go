@@ -18,6 +18,7 @@ import (
 	"github.com/mit-dci/lit/portxo"
 	"github.com/mit-dci/lit/sig64"
 	"github.com/mit-dci/lit/wire"
+	"github.com/mit-dci/lit/consts"
 )
 
 func (nd *LitNode) AddContract() (*lnutil.DlcContract, error) {
@@ -46,12 +47,29 @@ func (nd *LitNode) OfferDlc(peerIdx uint32, cIdx uint64) error {
 
 	var nullBytes [33]byte
 	// Check if everything's set
-	if c.OracleA[0] == nullBytes {
-		return fmt.Errorf("You need to set an oracle for the contract before offering it")
+
+
+	if c.OraclesNumber == dlc.ORACLESNUMBER_NOT_SET {
+		return fmt.Errorf("You need to set an oracles number for the contract before offering it")
 	}
 
-	if c.OracleR[0] == nullBytes {
-		return fmt.Errorf("You need to set an R-point for the contract before offering it")
+	if c.OraclesNumber > consts.MaxOraclesNumber {
+		return fmt.Errorf("The number of oracles have to be less than 8.")
+	}	
+
+
+	for o := uint32(0); o < c.OraclesNumber; o++ {
+
+		fmt.Printf("qln/dlc.go: OfferDlc(): o %d \n", o)
+
+		if c.OracleA[o] == nullBytes {
+			return fmt.Errorf("You need to set all %d oracls for the contract before offering it", c.OraclesNumber)
+		}
+	
+		if c.OracleR[o] == nullBytes {
+			return fmt.Errorf("You need to set all %d R-points for the contract before offering it", c.OraclesNumber)
+		}		
+		
 	}
 
 	if c.OracleTimestamp == 0 {

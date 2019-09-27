@@ -57,8 +57,10 @@ type DlcContract struct {
 	CoinType uint32
 	// Fee per byte
 	FeePerByte uint32
+	// It is a number of oracles required for the contract.
+	OraclesNumber uint32
 	// Pub keys of the oracle and the R point used in the contract
-	OracleA, OracleR [2][33]byte
+	OracleA, OracleR [8][33]byte
 	// The time we expect the oracle to publish
 	OracleTimestamp uint64
 	// The time after which the refund transaction becomes valid.
@@ -123,11 +125,6 @@ func DlcContractFromBytes(b []byte) (*DlcContract, error) {
 	}
 	c.TheirIdx = theirIdx
 
-	copy(c.OracleA[0][:], buf.Next(33))
-	copy(c.OracleA[1][:], buf.Next(33))
-	copy(c.OracleR[0][:], buf.Next(33))
-	copy(c.OracleR[1][:], buf.Next(33))	
-
 	peerIdx, err := wire.ReadVarInt(buf, 0)
 	if err != nil {
 		logging.Errorf("Error while deserializing varint for peerIdx: %s", err.Error())
@@ -147,7 +144,22 @@ func DlcContractFromBytes(b []byte) (*DlcContract, error) {
 		logging.Errorf("Error while deserializing varint for feePerByte: %s", err.Error())
 		return nil, err
 	}
-	c.FeePerByte = uint32(feePerByte)	
+	c.FeePerByte = uint32(feePerByte)
+	
+
+	oraclesNumber, err := wire.ReadVarInt(buf, 0)
+	if err != nil {
+		logging.Errorf("Error while deserializing varint for oraclesNumber: %s", err.Error())
+		return nil, err
+	}
+	c.OraclesNumber = uint32(oraclesNumber)	
+
+	
+	copy(c.OracleA[0][:], buf.Next(33))
+	copy(c.OracleA[1][:], buf.Next(33))
+	copy(c.OracleR[0][:], buf.Next(33))
+	copy(c.OracleR[1][:], buf.Next(33))
+
 
 	c.OracleTimestamp, err = wire.ReadVarInt(buf, 0)
 	if err != nil {
@@ -275,13 +287,18 @@ func (self *DlcContract) Bytes() []byte {
 
 	wire.WriteVarInt(&buf, 0, uint64(self.Idx))
 	wire.WriteVarInt(&buf, 0, uint64(self.TheirIdx))
+	wire.WriteVarInt(&buf, 0, uint64(self.PeerIdx))
+	wire.WriteVarInt(&buf, 0, uint64(self.CoinType))
+	wire.WriteVarInt(&buf, 0, uint64(self.FeePerByte))
+
+	wire.WriteVarInt(&buf, 0, uint64(self.OraclesNumber))
+
 	buf.Write(self.OracleA[0][:])
 	buf.Write(self.OracleA[1][:])
 	buf.Write(self.OracleR[0][:])
 	buf.Write(self.OracleR[1][:])
-	wire.WriteVarInt(&buf, 0, uint64(self.PeerIdx))
-	wire.WriteVarInt(&buf, 0, uint64(self.CoinType))
-	wire.WriteVarInt(&buf, 0, uint64(self.FeePerByte))
+
+
 	wire.WriteVarInt(&buf, 0, uint64(self.OracleTimestamp))
 	wire.WriteVarInt(&buf, 0, uint64(self.RefundTimestamp))
 	wire.WriteVarInt(&buf, 0, uint64(self.OurFundingAmount))

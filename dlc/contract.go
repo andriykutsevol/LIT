@@ -4,10 +4,12 @@ import (
 	"fmt"
 
 	"github.com/mit-dci/lit/lnutil"
+	"github.com/mit-dci/lit/consts"
 )
 
 const COINTYPE_NOT_SET = ^uint32(0) // Max Uint
 const FEEPERBYTE_NOT_SET = ^uint32(0) // Max Uint
+const ORACLESNUMBER_NOT_SET = ^uint32(0) // Max Uint
 
 // AddContract starts a new draft contract
 func (mgr *DlcManager) AddContract() (*lnutil.DlcContract, error) {
@@ -17,6 +19,7 @@ func (mgr *DlcManager) AddContract() (*lnutil.DlcContract, error) {
 	c.Status = lnutil.ContractStatusDraft
 	c.CoinType = COINTYPE_NOT_SET
 	c.FeePerByte = FEEPERBYTE_NOT_SET 
+	c.OraclesNumber = ORACLESNUMBER_NOT_SET
 	err = mgr.SaveContract(c)
 	if err != nil {
 		return nil, err
@@ -28,7 +31,7 @@ func (mgr *DlcManager) AddContract() (*lnutil.DlcContract, error) {
 // SetContractOracle assigns a particular oracle to a contract - used for
 // determining which pubkey A to use and can also allow for fetching R-points
 // automatically when the oracle was imported from a REST api
-func (mgr *DlcManager) SetContractOracle(cIdx, oIdx0, oIdx1 uint64) error {
+func (mgr *DlcManager) SetContractOracle(cIdx uint64, oIdx []uint64) error {
 
 	c, err := mgr.LoadContract(cIdx)
 	if err != nil {
@@ -38,26 +41,34 @@ func (mgr *DlcManager) SetContractOracle(cIdx, oIdx0, oIdx1 uint64) error {
 		return fmt.Errorf("You cannot change or set the oracle unless the" +
 			" contract is in Draft state")
 	}
-	o, err := mgr.LoadOracle(oIdx0)
-	if err != nil {
-		return err
+
+
+	if c.OraclesNumber == ORACLESNUMBER_NOT_SET {
+		return fmt.Errorf("You need to set the OraclesNumber variable.")
 	}
-	c.OracleA[0] = o.A
-
-	fmt.Printf("c.Oracle[0]: %x \n", c.OracleA[0])
-
-	c.OracleR[0] = [33]byte{}	// Reset the R point when changing the oracle
-
-	o, err = mgr.LoadOracle(oIdx1)
-	if err != nil {
-		return err
+	
+	if len(oIdx) < int(c.OraclesNumber) {
+		return fmt.Errorf("You cannot set the number of oracles in less than" +
+			" in a variable OraclesNumber")
 	}
 
-	c.OracleA[1] = o.A
 
-	fmt.Printf("c.Oracle[1]: %x \n", c.OracleA[1])
+	for i := uint64(1); i <= uint64(c.OraclesNumber); i++ {
 
-	c.OracleR[1] = [33]byte{}		// ?
+		o, err := mgr.LoadOracle(i)
+		if err != nil {
+			return err
+		}
+		c.OracleA[i-1] = o.A
+
+		// Reset R point after oracle setting
+		c.OracleR[i-1] = [33]byte{}
+
+		fmt.Printf("c.Oracle[%d]: %x \n", i-1, c.OracleA[i-1])
+	}
+
+
+
 	mgr.SaveContract(c)
 	return nil
 }
@@ -288,6 +299,33 @@ func (mgr *DlcManager) SetContractFeePerByte(cIdx uint64, feeperbyte uint32) err
 	}
 
 	c.FeePerByte = feeperbyte
+
+	mgr.SaveContract(c)
+
+	return nil
+}
+
+
+
+//SetContractOraclesNumber sets a number of oracles required for the contract.
+func (mgr *DlcManager) SetContractOraclesNumber(cIdx uint64, oraclesNumber uint32) error {
+	c, err := mgr.LoadContract(cIdx)
+	if err != nil {
+		return err
+	}
+
+
+	if c.Status != lnutil.ContractStatusDraft {
+		return fmt.Errorf("You cannot change or set the OraclesNumber unless" +
+			" the contract is in Draft state")
+	}
+
+
+	if oraclesNumber > consts.MaxOraclesNumber{
+		return fmt.Errorf("You cannot set OraclesNumber greater that %d (consts.MaxOraclesNumber)", consts.MaxOraclesNumber)		
+	}
+
+	c.OraclesNumber = oraclesNumber
 
 	mgr.SaveContract(c)
 

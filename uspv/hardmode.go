@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"os"
 
-	"fmt"
+	//"fmt"
 
 	"github.com/mit-dci/lit/btcutil/bloom"
 	"github.com/mit-dci/lit/btcutil/chaincfg/chainhash"
@@ -162,7 +162,7 @@ func ckLogFullBlock() bool {
 // different enough that it's better to have 2 separate functions
 func (s *SPVCon) IngestBlock(m *wire.MsgBlock) {
 
-	fmt.Printf("::%s::IngestBlock(): uspv/hardmode.go \n",os.Args[6][len(os.Args[6])-4:])
+	//fmt.Printf("::%s::IngestBlock(): uspv/hardmode.go \n",os.Args[6][len(os.Args[6])-4:])
 
 	var err error
 
