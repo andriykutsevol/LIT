@@ -190,7 +190,7 @@ func (r *LitRPC) SetContractDatafeed(args SetContractDatafeedArgs,
 
 type SetContractRPointArgs struct {
 	CIdx   uint64
-	RPoint [2][33]byte
+	RPoint [][33]byte
 }
 
 type SetContractRPointReply struct {

@@ -331,10 +331,17 @@ func (nd *LitNode) DlcOfferHandler(msg lnutil.DlcOfferMsg, peer *RemotePeer) {
 	// Copy
 	c.CoinType = msg.Contract.CoinType
 	c.FeePerByte = msg.Contract.FeePerByte
-	c.OracleA[0] = msg.Contract.OracleA[0]
-	c.OracleA[1] = msg.Contract.OracleA[1]
-	c.OracleR[0] = msg.Contract.OracleR[0]
-	c.OracleR[1] = msg.Contract.OracleR[1]	
+
+	c.OraclesNumber = msg.Contract.OraclesNumber
+
+	for i:=uint32(0); i < c.OraclesNumber; i++ {
+
+		c.OracleA[i] = msg.Contract.OracleA[i]
+		c.OracleR[i] = msg.Contract.OracleR[i]
+
+	}
+
+	
 	c.OracleTimestamp = msg.Contract.OracleTimestamp
 	c.RefundTimestamp = msg.Contract.RefundTimestamp
 
@@ -886,7 +893,12 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oracleSig0, or
 		var pubSpendBytes [33]byte
 		copy(pubSpendBytes[:], pubSpend.SerializeCompressed())
 
-		settleScript := lnutil.DlcCommitScript(c.OurPayoutBase, pubOracleBytes0, pubOracleBytes1, c.TheirPayoutBase, 5)
+		var pubOracleBytes [][33]byte
+
+		pubOracleBytes = append(pubOracleBytes, pubOracleBytes0)
+		pubOracleBytes = append(pubOracleBytes, pubOracleBytes1)
+
+		settleScript := lnutil.DlcCommitScript(c.OurPayoutBase, c.TheirPayoutBase, pubOracleBytes , 5)
 		err = nd.SignClaimTx(txClaim, settleTx.TxOut[0].Value, settleScript, privContractOutput, false)
 		if err != nil {
 			logging.Errorf("SettleContract SignClaimTx err %s", err.Error())

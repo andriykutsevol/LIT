@@ -18,6 +18,7 @@ import (
 	"github.com/mit-dci/lit/btcutil/txscript"
 	"github.com/mit-dci/lit/btcutil/txsort"
 	"github.com/mit-dci/lit/sig64"
+	"github.com/mit-dci/lit/consts"
 
 )
 
@@ -60,7 +61,7 @@ type DlcContract struct {
 	// It is a number of oracles required for the contract.
 	OraclesNumber uint32
 	// Pub keys of the oracle and the R point used in the contract
-	OracleA, OracleR [8][33]byte
+	OracleA, OracleR [consts.MaxOraclesNumber][33]byte
 	// The time we expect the oracle to publish
 	OracleTimestamp uint64
 	// The time after which the refund transaction becomes valid.
@@ -152,14 +153,19 @@ func DlcContractFromBytes(b []byte) (*DlcContract, error) {
 		logging.Errorf("Error while deserializing varint for oraclesNumber: %s", err.Error())
 		return nil, err
 	}
-	c.OraclesNumber = uint32(oraclesNumber)	
-
 	
-	copy(c.OracleA[0][:], buf.Next(33))
-	copy(c.OracleA[1][:], buf.Next(33))
-	copy(c.OracleR[0][:], buf.Next(33))
-	copy(c.OracleR[1][:], buf.Next(33))
+	c.OraclesNumber = uint32(oraclesNumber)
 
+	//fmt.Printf("FromBytes() c.OraclesNumber: %d\n", c.OraclesNumber)
+
+
+	for i := uint64(0); i < uint64(consts.MaxOraclesNumber); i++ {
+
+		//fmt.Printf("FromBytes() i: %d\n", i)
+
+		copy(c.OracleA[i][:], buf.Next(33))
+		copy(c.OracleR[i][:], buf.Next(33))
+	}	
 
 	c.OracleTimestamp, err = wire.ReadVarInt(buf, 0)
 	if err != nil {
@@ -293,11 +299,16 @@ func (self *DlcContract) Bytes() []byte {
 
 	wire.WriteVarInt(&buf, 0, uint64(self.OraclesNumber))
 
-	buf.Write(self.OracleA[0][:])
-	buf.Write(self.OracleA[1][:])
-	buf.Write(self.OracleR[0][:])
-	buf.Write(self.OracleR[1][:])
+	//fmt.Printf("Bytes() self.OraclesNumber: %d\n", self.OraclesNumber)
 
+
+	for i := uint64(0); i < uint64(consts.MaxOraclesNumber); i++ {
+
+		//fmt.Printf("Bytes() i: %d\n", i)
+
+		buf.Write(self.OracleA[i][:])
+		buf.Write(self.OracleR[i][:])
+	}
 
 	wire.WriteVarInt(&buf, 0, uint64(self.OracleTimestamp))
 	wire.WriteVarInt(&buf, 0, uint64(self.RefundTimestamp))
@@ -400,9 +411,9 @@ func PrintTx(tx *wire.MsgTx) {
 
 // DlcOutput returns a Txo for a particular value that pays to
 // (PubKeyPeer+PubKeyOracleSig or (OurPubKey and TimeDelay))
-func DlcOutput(pkPeer, pkOracleSig0, pkOracleSig1, pkOurs [33]byte, value int64) *wire.TxOut {
+func DlcOutput(pkPeer, pkOurs [33]byte, oraclesSigPub [][33]byte, value int64) *wire.TxOut {
 	
-	scriptBytes := DlcCommitScript(pkPeer, pkOracleSig0, pkOracleSig1, pkOurs, 5)
+	scriptBytes := DlcCommitScript(pkPeer, pkOurs, oraclesSigPub, 5)
 	scriptBytes = P2WSHify(scriptBytes)
 
 	return wire.NewTxOut(value, scriptBytes)
@@ -414,12 +425,14 @@ func DlcOutput(pkPeer, pkOracleSig0, pkOracleSig1, pkOurs [33]byte, value int64)
 // signature and their own private key to claim the funds from the output.
 // However, if they send the wrong one, they won't be able to claim the funds
 // and we can claim them once the time delay has passed.
-func DlcCommitScript(pubKeyPeer, pubKeyOracleSig0, pubKeyOracleSig1, ourPubKey [33]byte, delay uint16) []byte {
+func DlcCommitScript(pubKeyPeer, ourPubKey [33]byte, oraclesSigPub [][33]byte, delay uint16) []byte {
 	// Combine pubKey and Oracle Sig
-	combinedPubKey := CombinePubs(pubKeyPeer, pubKeyOracleSig0)
-	combinedPubKey = CombinePubs(combinedPubKey, pubKeyOracleSig1)
+	combinedPubKey := CombinePubs(pubKeyPeer, oraclesSigPub[0])
+	combinedPubKey = CombinePubs(combinedPubKey,  oraclesSigPub[1])
 
-	fmt.Printf("::%s:: DlcCommitScript(): lnutil/dlclib.go: combinedPubKey %x < -pubKeyPeer %x + pubKeyOracleSig0 %x + pubKeyOracleSig1 %x, ourPubKey %x, delay %d  \n",os.Args[6][len(os.Args[6])-4:], combinedPubKey, pubKeyPeer, pubKeyOracleSig0, pubKeyOracleSig1, ourPubKey, delay)
+	fmt.Printf("::%s:: DlcCommitScript(): lnutil/dlclib.go: combinedPubKey %x < -pubKeyPeer %x + oraclesSigPub[0] %x + oraclesSigPub[1] %x, ourPubKey %x, delay %d  \n",os.Args[6][len(os.Args[6])-4:], combinedPubKey, pubKeyPeer, oraclesSigPub[0], oraclesSigPub[1], ourPubKey, delay)
+
+	fmt.Printf("::%s:: DlcCommitScript(): lnutil/dlclib.go: len(oraclesSigPub): %d \n", len(oraclesSigPub))
 
 	return CommitScript(combinedPubKey, ourPubKey, delay)
 }
@@ -614,33 +627,38 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 	binary.Write(&buf, binary.BigEndian, uint64(0))
 	binary.Write(&buf, binary.BigEndian, uint64(0))
 	binary.Write(&buf, binary.BigEndian, d.OracleValue)
-	oracleSigPub0, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),c.OracleA[0], c.OracleR[0])
-	oracleSigPub1, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),c.OracleA[1], c.OracleR[1])
-	if err != nil {
-		return nil, err
+
+
+	var oraclesSigPub [][33]byte
+
+	for i:=uint32(0); i < c.OraclesNumber; i++ {
+
+		res, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),c.OracleA[i], c.OracleR[i])
+		if err != nil {
+			return nil, err
+		}
+
+		oraclesSigPub = append(oraclesSigPub, res)
+
 	}
 
 	// Ours = the one we generate & sign. Theirs (ours = false) = the one they
 	// generated, so we can use their sigs
 	if ours {
 		if valueTheirs > 0 {
-			tx.AddTxOut(DlcOutput(c.TheirPayoutBase, oracleSigPub0, oracleSigPub1,
-				c.OurPayoutBase, valueTheirs))
+			tx.AddTxOut(DlcOutput(c.TheirPayoutBase, c.OurPayoutBase, oraclesSigPub, valueTheirs))
 		}
 
 		if valueOurs > 0 {
-			tx.AddTxOut(wire.NewTxOut(valueOurs,
-				DirectWPKHScriptFromPKH(c.OurPayoutPKH)))
+			tx.AddTxOut(wire.NewTxOut(valueOurs, DirectWPKHScriptFromPKH(c.OurPayoutPKH)))
 		}
 	} else {
 		if valueOurs > 0 {
-			tx.AddTxOut(DlcOutput(c.OurPayoutBase, oracleSigPub0, oracleSigPub1,
-				c.TheirPayoutBase, valueOurs))
+			tx.AddTxOut(DlcOutput(c.OurPayoutBase, c.TheirPayoutBase, oraclesSigPub, valueOurs))
 		}
 
 		if valueTheirs > 0 {
-			tx.AddTxOut(wire.NewTxOut(valueTheirs,
-				DirectWPKHScriptFromPKH(c.TheirPayoutPKH)))
+			tx.AddTxOut(wire.NewTxOut(valueTheirs, DirectWPKHScriptFromPKH(c.TheirPayoutPKH)))
 		}
 	}
 

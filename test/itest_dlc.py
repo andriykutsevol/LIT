@@ -41,9 +41,11 @@ def run_t(env, params):
 
         env.new_oracle(1, oracle_value) # publishing interval is 1 second.
         env.new_oracle(1, oracle_value) # publishing interval is 1 second.
+        env.new_oracle(1, oracle_value) # publishing interval is 1 second.
 
         oracle1 = env.oracles[0]
         oracle2 = env.oracles[1]
+        oracle3 = env.oracles[2]
 
         time.sleep(2)
 
@@ -142,16 +144,20 @@ def run_t(env, params):
         
         oracle1_pubkey = json.loads(oracle1.get_pubkey())
         oracle2_pubkey = json.loads(oracle2.get_pubkey())
+        oracle3_pubkey = json.loads(oracle3.get_pubkey())
 
         print("oracle1_pubkey: " + str(oracle1_pubkey))
         print("oracle2_pubkey: " + str(oracle2_pubkey))
+        print("oracle3_pubkey: " + str(oracle3_pubkey))
         
         oracle_res1 = lit1.rpc.AddOracle(Key=oracle1_pubkey["A"], Name="oracle1")
         oracle_res2 = lit1.rpc.AddOracle(Key=oracle2_pubkey["A"], Name="oracle2")
+        oracle_res3 = lit1.rpc.AddOracle(Key=oracle3_pubkey["A"], Name="oracle3")
 
 
         lit2.rpc.AddOracle(Key=oracle1_pubkey["A"], Name="oracle1")
         lit2.rpc.AddOracle(Key=oracle2_pubkey["A"], Name="oracle2")
+        lit2.rpc.AddOracle(Key=oracle3_pubkey["A"], Name="oracle3")
 
 
         #------------
@@ -176,10 +182,10 @@ def run_t(env, params):
         #==========================================================
 
 
-        res = lit1.rpc.SetContractOraclesNumber(CIdx=contract["Contract"]["Idx"], OraclesNumber=2)
+        res = lit1.rpc.SetContractOraclesNumber(CIdx=contract["Contract"]["Idx"], OraclesNumber=3)
         assert res["Success"], "SetContractOraclesNumber does not works"
 
-        res = lit1.rpc.SetContractOracle(CIdx=contract["Contract"]["Idx"], OIdx=[oracle_res1["Oracle"]["Idx"], oracle_res2["Oracle"]["Idx"]])
+        res = lit1.rpc.SetContractOracle(CIdx=contract["Contract"]["Idx"], OIdx=[oracle_res1["Oracle"]["Idx"], oracle_res2["Oracle"]["Idx"], oracle_res3["Oracle"]["Idx"]])
         assert res["Success"], "SetContractOracle does not works"
 
         time.sleep(1)
@@ -207,9 +213,11 @@ def run_t(env, params):
 
         datasources0 = json.loads(oracle1.get_datasources())
         datasources1 = json.loads(oracle2.get_datasources())
+        datasources2 = json.loads(oracle3.get_datasources())
 
         print("datasources0: " + str(datasources0))
-        print("datasources1: " + str(datasources0))
+        print("datasources1: " + str(datasources1))
+        print("datasources2: " + str(datasources2))
 
         # Since the oracle publishes data every 1 second (we set this time above), 
         # we increase the time for a point by 3 seconds.
@@ -232,9 +240,11 @@ def run_t(env, params):
 
         rpoint0 = oracle1.get_rpoint(datasources0[0]["id"], settlement_time)
         rpoint1 = oracle2.get_rpoint(datasources1[0]["id"], settlement_time)
+        rpoint2 = oracle3.get_rpoint(datasources2[0]["id"], settlement_time)
 
         print("rpoint0: " + str(rpoint0))
         print("rpoint1: " + str(rpoint1))
+        print("rpoint2: " + str(rpoint2))
 
         decode_hex = codecs.getdecoder("hex_codec")
         b_RPoint = decode_hex(json.loads(rpoint0)['R'])[0]
@@ -245,6 +255,8 @@ def run_t(env, params):
         RPoint1 = [elem for elem in b_RPoint]  
 
 
+        b_RPoint = decode_hex(json.loads(rpoint2)['R'])[0]
+        RPoint2 = [elem for elem in b_RPoint] 
 
 
         #==========================================================
@@ -252,9 +264,10 @@ def run_t(env, params):
         #==========================================================
 
         print("RPoint0: " + str(RPoint0))
-        print("RPoint1: " + str(RPoint1))              
+        print("RPoint1: " + str(RPoint1))  
+        print("RPoint2: " + str(RPoint2))            
 
-        res = lit1.rpc.SetContractRPoint(CIdx=contract["Contract"]["Idx"], RPoint=[RPoint0, RPoint1])
+        res = lit1.rpc.SetContractRPoint(CIdx=contract["Contract"]["Idx"], RPoint=[RPoint0, RPoint1, RPoint2])
         assert res["Success"], "SetContractRpoint does not works"
 
 
@@ -358,13 +371,13 @@ def run_t(env, params):
         assert bal1sum == lit1_bal_after_accept, "lit1 Balance after contract accept does not match"
         assert bal2sum == lit2_bal_after_accept, "lit2 Balance after contract accept does not match"        
 
-        oracle1_val = ""
-        oracle1_sig = ""
 
         i = 0
         while True:
             res1 = oracle1.get_publication(json.loads(rpoint0)['R'])
             res2 = oracle2.get_publication(json.loads(rpoint1)['R'])
+            res3 = oracle3.get_publication(json.loads(rpoint2)['R'])
+
             time.sleep(5)
             i += 1
             if i>4:
@@ -376,6 +389,9 @@ def run_t(env, params):
 
                 oracle2_val = json.loads(res2)["value"]
                 oracle2_sig = json.loads(res2)["signature"]
+
+                oracle3_val = json.loads(res3)["value"]
+                oracle3_sig = json.loads(res3)["signature"]                
 
                 break
             except BaseException as e:
@@ -395,6 +411,9 @@ def run_t(env, params):
         b_OracleSig1 = decode_hex(oracle2_sig)[0]
         OracleSig1 = [elem for elem in b_OracleSig1]
 
+        b_OracleSig2 = decode_hex(oracle3_sig)[0]
+        OracleSig2 = [elem for elem in b_OracleSig2]        
+
         print("Before SettleContract")
         time.sleep(5)
 
@@ -406,7 +425,7 @@ def run_t(env, params):
         #==========================================================
         #==========================================================
 
-        res = env.lits[node_to_settle].rpc.SettleContract(CIdx=contract["Contract"]["Idx"], OracleValue=oracle1_val, OracleSig=[OracleSig0, OracleSig1])
+        res = env.lits[node_to_settle].rpc.SettleContract(CIdx=contract["Contract"]["Idx"], OracleValue=oracle1_val, OracleSig=[OracleSig0, OracleSig1, OracleSig2])
         assert res["Success"], "SettleContract does not works."
 
 
