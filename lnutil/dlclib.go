@@ -154,12 +154,7 @@ func DlcContractFromBytes(b []byte) (*DlcContract, error) {
 	
 	c.OraclesNumber = uint32(oraclesNumber)
 
-	//fmt.Printf("FromBytes() c.OraclesNumber: %d\n", c.OraclesNumber)
-
-
 	for i := uint64(0); i < uint64(consts.MaxOraclesNumber); i++ {
-
-		//fmt.Printf("FromBytes() i: %d\n", i)
 
 		copy(c.OracleA[i][:], buf.Next(33))
 		copy(c.OracleR[i][:], buf.Next(33))
@@ -631,14 +626,10 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 
 	for i:=uint32(0); i < c.OraclesNumber; i++ {
 
-		fmt.Println("zzz1")
-
 		res, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),c.OracleA[i], c.OracleR[i])
 		if err != nil {
 			return nil, err
 		}
-
-		fmt.Println("zzz2")
 
 		oraclesSigPub = append(oraclesSigPub, res)
 

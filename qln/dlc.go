@@ -51,10 +51,7 @@ func (nd *LitNode) OfferDlc(peerIdx uint32, cIdx uint64) error {
 		return fmt.Errorf("The number of oracles have to be less than 8.")
 	}	
 
-
 	for o := uint32(0); o < c.OraclesNumber; o++ {
-
-		fmt.Printf("qln/dlc.go: OfferDlc(): o %d \n", o)
 
 		if c.OracleA[o] == nullBytes {
 			return fmt.Errorf("You need to set all %d oracls for the contract before offering it", c.OraclesNumber)
@@ -314,7 +311,6 @@ func (nd *LitNode) DlcOfferHandler(msg lnutil.DlcOfferMsg, peer *RemotePeer) {
 
 	}
 
-	
 	c.OracleTimestamp = msg.Contract.OracleTimestamp
 	c.RefundTimestamp = msg.Contract.RefundTimestamp
 
@@ -366,7 +362,6 @@ func (nd *LitNode) DlcAcceptHandler(msg lnutil.DlcOfferAcceptMsg, peer *RemotePe
 	c.TheirRefundPKH = msg.OurRefundPKH
 	c.TheirrefundTxSig64 = msg.OurrefundTxSig64
 
-	//------------------------------------------
 
 	c.Status = lnutil.ContractStatusAccepted
 	err = nd.DlcManager.SaveContract(c)
@@ -380,8 +375,6 @@ func (nd *LitNode) DlcAcceptHandler(msg lnutil.DlcOfferAcceptMsg, peer *RemotePe
 	if err != nil {
 		return err
 	}
-
-	//------------------------------------------
 
 	wal, _ := nd.SubWallet[c.CoinType]
 
@@ -411,8 +404,6 @@ func (nd *LitNode) DlcAcceptHandler(msg lnutil.DlcOfferAcceptMsg, peer *RemotePe
 		nd.DlcManager.SaveContract(c)
 		return err
 	}
-
-	//------------------------------------------
 
 	outMsg := lnutil.NewDlcContractAckMsg(c, sigs, c.OurrefundTxSig64)
 	c.Status = lnutil.ContractStatusAcknowledged
@@ -609,7 +600,6 @@ func (nd *LitNode) BuildDlcFundingTransaction(c *lnutil.DlcContract) (wire.MsgTx
 
 	}
 
-	//====================================================
 
 	// Here can be a situation when peers have different number of inputs.
 	// Therefore we have to calculate fees for each peer separately.

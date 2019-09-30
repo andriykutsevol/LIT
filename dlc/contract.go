@@ -52,22 +52,15 @@ func (mgr *DlcManager) SetContractOracle(cIdx uint64, oIdx []uint64) error {
 			" in a variable OraclesNumber")
 	}
 
-
 	for i := uint64(1); i <= uint64(c.OraclesNumber); i++ {
-
 		o, err := mgr.LoadOracle(i)
 		if err != nil {
 			return err
 		}
 		c.OracleA[i-1] = o.A
-
 		// Reset R point after oracle setting
 		c.OracleR[i-1] = [33]byte{}
-
-		fmt.Printf("c.Oracle[%d]: %x \n", i-1, c.OracleA[i-1])
 	}
-
-
 
 	mgr.SaveContract(c)
 	return nil

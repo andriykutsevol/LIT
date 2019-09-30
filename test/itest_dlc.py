@@ -9,7 +9,7 @@ import requests # pip3 install requests
 
 import codecs
 
-deb_mod = True
+deb_mod = False
 
 def run_t(env, params):
     global deb_mod
@@ -257,12 +257,8 @@ def run_t(env, params):
             print(bc.rpc.listaddressgroupings())
 
 
-        print("Before Generate Block")
-
         env.generate_block()
         time.sleep(2)
-
-        print("After Generate Block")
 
         print("Accept")
         bals1 = lit1.get_balance_info()  
@@ -317,8 +313,14 @@ def run_t(env, params):
                 print(e)
                 next
 
-
-        time.sleep(5)
+        # Oracles have to publish the same value
+        vEqual = True
+        nTemp = OraclesVal[0]
+        for v in OraclesVal:
+            if nTemp != v:
+                vEqual = False
+                break;
+        assert vEqual, "Oracles publish different values"      
 
         res = env.lits[node_to_settle].rpc.SettleContract(CIdx=contract["Contract"]["Idx"], OracleValue=OraclesVal[0], OracleSig=OraclesSig)
         assert res["Success"], "SettleContract does not works."

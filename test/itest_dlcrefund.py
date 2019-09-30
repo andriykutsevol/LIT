@@ -9,7 +9,7 @@ import requests # pip3 install requests
 
 import codecs
 
-deb_mod = True
+deb_mod = False
 
 
 def run_t(env, params):
@@ -214,33 +214,21 @@ def run_t(env, params):
         assert res["Contract"]["OurFundingAmount"] == ourFundingAmount, "SetContractFunding does not works"
         assert res["Contract"]["TheirFundingAmount"] == theirFundingAmount, "SetContractFunding does not works"
 
-        print("Before SetContractDivision")
-        
         res = lit1.rpc.SetContractDivision(CIdx=contract["Contract"]["Idx"], ValueFullyOurs=valueFullyOurs, ValueFullyTheirs=valueFullyTheirs)
         assert res["Success"], "SetContractDivision does not works"
         
-        print("After SetContractDivision")
-
         time.sleep(3)
   
         res = lit1.rpc.ListConnections()
         print(res)
 
-        print("Before OfferContract")
-
         res = lit1.rpc.OfferContract(CIdx=contract["Contract"]["Idx"], PeerIdx=lit1.get_peer_id(lit2))
         assert res["Success"], "OfferContract does not works"
 
-        print("After OfferContract")
-
         time.sleep(3)
        
-        print("Before ContractRespond")
-
         res = lit2.rpc.ContractRespond(AcceptOrDecline=True, CIdx=1)
         assert res["Success"], "ContractRespond on lit2 does not works"
-
-        print("After ContractRespond")
 
         time.sleep(3)
 
@@ -260,13 +248,9 @@ def run_t(env, params):
 
         # #------------------------------------------  
 
-
-        print("Before Generate Block")
-
         env.generate_block()
         time.sleep(2)
 
-        print("After Generate Block")
 
         print("Accept")
         bals1 = lit1.get_balance_info()  
@@ -288,9 +272,6 @@ def run_t(env, params):
         assert bal1sum == lit1_bal_after_accept, "lit1 Balance after contract accept does not match"
         assert bal2sum == lit2_bal_after_accept, "lit2 Balance after contract accept does not match"        
 
-
-
-        print("Before Refund Contract")
         time.sleep(2)
 
         res = env.lits[node_to_refund].rpc.RefundContract(CIdx=1)
