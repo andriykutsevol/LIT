@@ -112,6 +112,7 @@ func (mgr *DlcManager) SetContractRefundTime(cIdx, time uint64) error {
 // SetContractDatafeed will automatically fetch the R-point from the REST API,
 // if an oracle is imported from a REST API. You need to set the settlement time
 // first, because the R point is a key unique for the time and feed
+// TODO change for multiple oracles.
 func (mgr *DlcManager) SetContractDatafeed(cIdx, feed uint64) error {
 	c, err := mgr.LoadContract(cIdx)
 	if err != nil {
@@ -134,7 +135,6 @@ func (mgr *DlcManager) SetContractDatafeed(cIdx, feed uint64) error {
 	}
 
 	c.OracleR[0], err = o.FetchRPoint(feed, c.OracleTimestamp)
-	c.OracleR[1], err = o.FetchRPoint(feed, c.OracleTimestamp)
 	if err != nil {
 		return err
 	}
