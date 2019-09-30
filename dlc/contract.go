@@ -82,8 +82,10 @@ func (mgr *DlcManager) SetContractSettlementTime(cIdx, time uint64) error {
 	fmt.Printf("c.OracleTimestamp %d \n", c.OracleTimestamp)
 
 	// Reset the R point
-	c.OracleR[0] = [33]byte{}
-	c.OracleR[1] = [33]byte{}
+	for i, _ := range c.OracleR{
+		c.OracleR[i] = [33]byte{}
+	}
+
 	mgr.SaveContract(c)
 	return nil
 }
