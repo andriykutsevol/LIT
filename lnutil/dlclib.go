@@ -8,8 +8,6 @@ import (
 	"math/big"
 	"errors"
 
-	"os"
-
 	"github.com/mit-dci/lit/btcutil/chaincfg/chainhash"
 	"github.com/mit-dci/lit/crypto/koblitz"
 	"github.com/mit-dci/lit/logging"
@@ -427,12 +425,12 @@ func DlcOutput(pkPeer, pkOurs [33]byte, oraclesSigPub [][33]byte, value int64) *
 // and we can claim them once the time delay has passed.
 func DlcCommitScript(pubKeyPeer, ourPubKey [33]byte, oraclesSigPub [][33]byte, delay uint16) []byte {
 	// Combine pubKey and Oracle Sig
+
 	combinedPubKey := CombinePubs(pubKeyPeer, oraclesSigPub[0])
-	combinedPubKey = CombinePubs(combinedPubKey,  oraclesSigPub[1])
 
-	fmt.Printf("::%s:: DlcCommitScript(): lnutil/dlclib.go: combinedPubKey %x < -pubKeyPeer %x + oraclesSigPub[0] %x + oraclesSigPub[1] %x, ourPubKey %x, delay %d  \n",os.Args[6][len(os.Args[6])-4:], combinedPubKey, pubKeyPeer, oraclesSigPub[0], oraclesSigPub[1], ourPubKey, delay)
-
-	fmt.Printf("::%s:: DlcCommitScript(): lnutil/dlclib.go: len(oraclesSigPub): %d \n", len(oraclesSigPub))
+	for i := 1; i < len(oraclesSigPub); i++ {
+		combinedPubKey = CombinePubs(combinedPubKey,  oraclesSigPub[i])
+	}
 
 	return CommitScript(combinedPubKey, ourPubKey, delay)
 }
@@ -633,10 +631,14 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 
 	for i:=uint32(0); i < c.OraclesNumber; i++ {
 
+		fmt.Println("zzz1")
+
 		res, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),c.OracleA[i], c.OracleR[i])
 		if err != nil {
 			return nil, err
 		}
+
+		fmt.Println("zzz2")
 
 		oraclesSigPub = append(oraclesSigPub, res)
 

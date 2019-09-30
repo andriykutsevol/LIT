@@ -522,7 +522,7 @@ def t_11_0(env):
 
     #-----------------------------
 
-    oracles_number = 4
+    oracles_number = 1
     oracle_value = 11
     node_to_settle = 0
 

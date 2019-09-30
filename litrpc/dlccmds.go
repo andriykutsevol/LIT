@@ -6,6 +6,7 @@ import (
 
 	"github.com/mit-dci/lit/dlc"
 	"github.com/mit-dci/lit/lnutil"
+	"github.com/mit-dci/lit/consts"
 )
 
 type ListOraclesArgs struct {
@@ -474,7 +475,7 @@ func (r *LitRPC) ContractRespond(args ContractRespondArgs, reply *ContractRespon
 type SettleContractArgs struct {
 	CIdx        uint64
 	OracleValue int64
-	OracleSig   [8][32]byte
+	OracleSig   [consts.MaxOraclesNumber][32]byte
 }
 
 type SettleContractReply struct {
@@ -491,7 +492,7 @@ func (r *LitRPC) SettleContract(args SettleContractArgs,
 	var err error
 
 	reply.SettleTxHash, reply.ClaimTxHash, err = r.Node.SettleContract(
-		args.CIdx, args.OracleValue, args.OracleSig[0], args.OracleSig[1])
+		args.CIdx, args.OracleValue, args.OracleSig)
 	if err != nil {
 		return err
 	}

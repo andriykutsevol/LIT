@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"errors"
 
 	"github.com/fatih/color"
 	"github.com/mit-dci/lit/litrpc"
@@ -953,6 +954,10 @@ func (lc *litAfClient) DlcSetContractOraclesNumber(textArgs []string) error {
 	OraclesNumber, err := strconv.ParseUint(textArgs[1], 10, 64)
 	if err != nil {
 		return err
+	}
+
+	if OraclesNumber > 1 {
+		return errors.New("Multiple oracles supported only from RPC cals.")
 	}
 
 	args.CIdx = cIdx

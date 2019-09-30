@@ -752,7 +752,7 @@ func (nd *LitNode) FundContract(c *lnutil.DlcContract) error {
 	return nil
 }
 
-func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oracleSig0, oracleSig1 [32]byte) ([32]byte, [32]byte, error) {
+func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[consts.MaxOraclesNumber][32]byte) ([32]byte, [32]byte, error) {
 
 	//oracleSig1 := oracleSig0
 
@@ -876,27 +876,27 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oracleSig0, or
 		kg.Step[2] = UseContractPayoutBase
 		privSpend, _ := wal.GetPriv(kg)
 
-		pubSpend := wal.GetPub(kg)
-
-		privOracle0, pubOracle0 := koblitz.PrivKeyFromBytes(koblitz.S256(), oracleSig0[:])
-		privOracle1, pubOracle1 := koblitz.PrivKeyFromBytes(koblitz.S256(), oracleSig1[:])
-
-		privContractOutput := lnutil.CombinePrivateKeys(privSpend, privOracle0)
-		privContractOutput = lnutil.CombinePrivateKeys(privContractOutput, privOracle1)
-
-		var pubOracleBytes0 [33]byte
-		copy(pubOracleBytes0[:], pubOracle0.SerializeCompressed())
-
-		var pubOracleBytes1 [33]byte
-		copy(pubOracleBytes1[:], pubOracle1.SerializeCompressed())
-
-		var pubSpendBytes [33]byte
-		copy(pubSpendBytes[:], pubSpend.SerializeCompressed())
 
 		var pubOracleBytes [][33]byte
 
+		privOracle0, pubOracle0 := koblitz.PrivKeyFromBytes(koblitz.S256(), oraclesSig[0][:])
+		privContractOutput := lnutil.CombinePrivateKeys(privSpend, privOracle0)
+
+		var pubOracleBytes0 [33]byte
+		copy(pubOracleBytes0[:], pubOracle0.SerializeCompressed())		
 		pubOracleBytes = append(pubOracleBytes, pubOracleBytes0)
-		pubOracleBytes = append(pubOracleBytes, pubOracleBytes1)
+
+		for i:=uint32(1); i < c.OraclesNumber; i++ {
+
+			privOracle, pubOracle := koblitz.PrivKeyFromBytes(koblitz.S256(), oraclesSig[i][:])
+			privContractOutput = lnutil.CombinePrivateKeys(privContractOutput, privOracle)
+
+			var pubOracleBytes1 [33]byte
+			copy(pubOracleBytes1[:], pubOracle.SerializeCompressed())			
+			pubOracleBytes = append(pubOracleBytes, pubOracleBytes1)
+
+
+		}
 
 		settleScript := lnutil.DlcCommitScript(c.OurPayoutBase, c.TheirPayoutBase, pubOracleBytes , 5)
 		err = nd.SignClaimTx(txClaim, settleTx.TxOut[0].Value, settleScript, privContractOutput, false)
