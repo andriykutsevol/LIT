@@ -12,6 +12,7 @@ import (
 	"github.com/mit-dci/lit/portxo"
 	"github.com/mit-dci/lit/sig64"
 	"github.com/mit-dci/lit/wire"
+	"github.com/mit-dci/lit/consts"
 )
 
 func (nd *LitNode) AddContract() (*lnutil.DlcContract, error) {
@@ -40,12 +41,27 @@ func (nd *LitNode) OfferDlc(peerIdx uint32, cIdx uint64) error {
 
 	var nullBytes [33]byte
 	// Check if everything's set
-	if c.OracleA == nullBytes {
-		return fmt.Errorf("You need to set an oracle for the contract before offering it")
+
+
+	if c.OraclesNumber == dlc.ORACLESNUMBER_NOT_SET {
+		return fmt.Errorf("You need to set an oracles number for the contract before offering it")
 	}
 
-	if c.OracleR == nullBytes {
-		return fmt.Errorf("You need to set an R-point for the contract before offering it")
+	if c.OraclesNumber > consts.MaxOraclesNumber {
+		return fmt.Errorf("The number of oracles have to be less than 8.")
+	}	
+
+	for o := uint32(0); o < c.OraclesNumber; o++ {
+
+		fmt.Printf("qln/dlc.go: OfferDlc(): o %d \n", o)
+
+		if c.OracleA[o] == nullBytes {
+			return fmt.Errorf("You need to set all %d oracls for the contract before offering it", c.OraclesNumber)
+		}
+	
+		if c.OracleR[o] == nullBytes {
+			return fmt.Errorf("You need to set all %d R-points for the contract before offering it", c.OraclesNumber)
+		}
 	}
 
 	if c.OracleTimestamp == 0 {
@@ -286,8 +302,16 @@ func (nd *LitNode) DlcOfferHandler(msg lnutil.DlcOfferMsg, peer *RemotePeer) {
 	// Copy
 	c.CoinType = msg.Contract.CoinType
 	c.FeePerByte = msg.Contract.FeePerByte
-	c.OracleA = msg.Contract.OracleA
-	c.OracleR = msg.Contract.OracleR
+
+	c.OraclesNumber = msg.Contract.OraclesNumber
+
+	for i:=uint32(0); i < c.OraclesNumber; i++ {
+
+		c.OracleA[i] = msg.Contract.OracleA[i]
+		c.OracleR[i] = msg.Contract.OracleR[i]
+
+	}
+
 	c.OracleTimestamp = msg.Contract.OracleTimestamp
 	c.RefundTimestamp = msg.Contract.RefundTimestamp
 
@@ -654,7 +678,7 @@ func (nd *LitNode) FundContract(c *lnutil.DlcContract) error {
 	return nil
 }
 
-func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oracleSig [32]byte) ([32]byte, [32]byte, error) {
+func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[consts.MaxOraclesNumber][32]byte) ([32]byte, [32]byte, error) {
 
 	c, err := nd.DlcManager.LoadContract(cIdx)
 	if err != nil {
@@ -772,16 +796,22 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oracleSig [32]
 		kg.Step[2] = UseContractPayoutBase
 		privSpend, _ := wal.GetPriv(kg)
 
-		pubSpend := wal.GetPub(kg)
-		privOracle, pubOracle := koblitz.PrivKeyFromBytes(koblitz.S256(), oracleSig[:])
-		privContractOutput := lnutil.CombinePrivateKeys(privSpend, privOracle)
+		var pubOracleBytes [][33]byte
+		privOracle0, pubOracle0 := koblitz.PrivKeyFromBytes(koblitz.S256(), oraclesSig[0][:])
+		privContractOutput := lnutil.CombinePrivateKeys(privSpend, privOracle0)
+		var pubOracleBytes0 [33]byte
+		copy(pubOracleBytes0[:], pubOracle0.SerializeCompressed())
+		pubOracleBytes = append(pubOracleBytes, pubOracleBytes0)
 
-		var pubOracleBytes [33]byte
-		copy(pubOracleBytes[:], pubOracle.SerializeCompressed())
-		var pubSpendBytes [33]byte
-		copy(pubSpendBytes[:], pubSpend.SerializeCompressed())
+		for i:=uint32(1); i < c.OraclesNumber; i++ {
+			privOracle, pubOracle := koblitz.PrivKeyFromBytes(koblitz.S256(), oraclesSig[i][:])
+			privContractOutput = lnutil.CombinePrivateKeys(privContractOutput, privOracle)
+			var pubOracleBytes1 [33]byte
+			copy(pubOracleBytes1[:], pubOracle.SerializeCompressed())
+			pubOracleBytes = append(pubOracleBytes, pubOracleBytes1)
+		}
 
-		settleScript := lnutil.DlcCommitScript(c.OurPayoutBase, pubOracleBytes, c.TheirPayoutBase, 5)
+		settleScript := lnutil.DlcCommitScript(c.OurPayoutBase, c.TheirPayoutBase, pubOracleBytes , 5)
 		err = nd.SignClaimTx(txClaim, settleTx.TxOut[0].Value, settleScript, privContractOutput, false)
 		if err != nil {
 			logging.Errorf("SettleContract SignClaimTx err %s", err.Error())
