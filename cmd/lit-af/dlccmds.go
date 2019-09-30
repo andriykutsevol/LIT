@@ -968,6 +968,8 @@ func (lc *litAfClient) DlcSetContractOraclesNumber(textArgs []string) error {
 		return err
 	}
 
+	fmt.Fprint(color.Output, "SetContractOraclesNumber set successfully\n")
+
 	return nil
 }
 

@@ -138,10 +138,13 @@ def run_t(env, params):
         for oracle in oracles:
             opk = json.loads(oracle.get_pubkey())
             oracles_pubkey.append(opk)
+
             oidx = lit1.rpc.AddOracle(Key=opk["A"], Name=opk["A"])["Oracle"]["Idx"]
             oidxs.append(oidx)
             lit2.rpc.AddOracle(Key=opk["A"], Name=opk["A"])["Oracle"]["Idx"]
+
             datasources.append(json.loads(oracle.get_datasources()))
+
 
         # #------------
         # # Now we have to create a contract in the lit1 node.

@@ -144,6 +144,7 @@ func DlcContractFromBytes(b []byte) (*DlcContract, error) {
 		return nil, err
 	}
 	c.FeePerByte = uint32(feePerByte)
+	
 
 	oraclesNumber, err := wire.ReadVarInt(buf, 0)
 	if err != nil {
@@ -153,7 +154,13 @@ func DlcContractFromBytes(b []byte) (*DlcContract, error) {
 	
 	c.OraclesNumber = uint32(oraclesNumber)
 
+	//fmt.Printf("FromBytes() c.OraclesNumber: %d\n", c.OraclesNumber)
+
+
 	for i := uint64(0); i < uint64(consts.MaxOraclesNumber); i++ {
+
+		//fmt.Printf("FromBytes() i: %d\n", i)
+
 		copy(c.OracleA[i][:], buf.Next(33))
 		copy(c.OracleR[i][:], buf.Next(33))
 	}	
@@ -290,7 +297,12 @@ func (self *DlcContract) Bytes() []byte {
 
 	wire.WriteVarInt(&buf, 0, uint64(self.OraclesNumber))
 
+	//fmt.Printf("Bytes() self.OraclesNumber: %d\n", self.OraclesNumber)
+
+
 	for i := uint64(0); i < uint64(consts.MaxOraclesNumber); i++ {
+
+		//fmt.Printf("Bytes() i: %d\n", i)
 
 		buf.Write(self.OracleA[i][:])
 		buf.Write(self.OracleR[i][:])
@@ -398,7 +410,7 @@ func PrintTx(tx *wire.MsgTx) {
 // DlcOutput returns a Txo for a particular value that pays to
 // (PubKeyPeer+PubKeyOracleSig or (OurPubKey and TimeDelay))
 func DlcOutput(pkPeer, pkOurs [33]byte, oraclesSigPub [][33]byte, value int64) *wire.TxOut {
-
+	
 	scriptBytes := DlcCommitScript(pkPeer, pkOurs, oraclesSigPub, 5)
 	scriptBytes = P2WSHify(scriptBytes)
 
@@ -413,10 +425,13 @@ func DlcOutput(pkPeer, pkOurs [33]byte, oraclesSigPub [][33]byte, value int64) *
 // and we can claim them once the time delay has passed.
 func DlcCommitScript(pubKeyPeer, ourPubKey [33]byte, oraclesSigPub [][33]byte, delay uint16) []byte {
 	// Combine pubKey and Oracle Sig
+
 	combinedPubKey := CombinePubs(pubKeyPeer, oraclesSigPub[0])
+
 	for i := 1; i < len(oraclesSigPub); i++ {
 		combinedPubKey = CombinePubs(combinedPubKey,  oraclesSigPub[i])
 	}
+
 	return CommitScript(combinedPubKey, ourPubKey, delay)
 }
 
@@ -611,14 +626,22 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 	binary.Write(&buf, binary.BigEndian, uint64(0))
 	binary.Write(&buf, binary.BigEndian, d.OracleValue)
 
+
 	var oraclesSigPub [][33]byte
 
 	for i:=uint32(0); i < c.OraclesNumber; i++ {
+
+		fmt.Println("zzz1")
+
 		res, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),c.OracleA[i], c.OracleR[i])
 		if err != nil {
 			return nil, err
 		}
+
+		fmt.Println("zzz2")
+
 		oraclesSigPub = append(oraclesSigPub, res)
+
 	}
 
 	// Ours = the one we generate & sign. Theirs (ours = false) = the one they

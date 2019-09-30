@@ -9,7 +9,8 @@ import requests # pip3 install requests
 
 import codecs
 
-deb_mod = False
+deb_mod = True
+
 def run_t(env, params):
     global deb_mod
     try:
@@ -40,6 +41,7 @@ def run_t(env, params):
         #------------
 
         oracles = []
+
         for i in range(oracles_number):
             env.new_oracle(1, oracle_value) # publishing interval is 1 second.
             oracles.append(env.oracles[i])
@@ -142,9 +144,11 @@ def run_t(env, params):
         for oracle in oracles:
             opk = json.loads(oracle.get_pubkey())
             oracles_pubkey.append(opk)
+
             oidx = lit1.rpc.AddOracle(Key=opk["A"], Name=opk["A"])["Oracle"]["Idx"]
             oidxs.append(oidx)
             lit2.rpc.AddOracle(Key=opk["A"], Name=opk["A"])["Oracle"]["Idx"]
+
             datasources.append(json.loads(oracle.get_datasources()))
 
 
@@ -292,23 +296,27 @@ def run_t(env, params):
             for o, r in zip(oracles, rpoints):
                 publications_result.append(o.get_publication(json.loads(r)['R']))
 
+
             time.sleep(5)
             i += 1
             if i>4:
                 assert False, "Error: Oracle does not publish data"
-
+            
             try:
+
                 for pr in publications_result:
                     oracle_val = json.loads(pr)["value"]
                     OraclesVal.append(oracle_val)
                     oracle_sig = json.loads(pr)["signature"]
                     b_OracleSig = decode_hex(oracle_sig)[0]
                     OracleSig = [elem for elem in b_OracleSig]
-                    OraclesSig.append(OracleSig)
+                    OraclesSig.append(OracleSig)                        
+
                 break
             except BaseException as e:
                 print(e)
                 next
+
 
         time.sleep(5)
 
@@ -382,17 +390,20 @@ def run_t(env, params):
             print(pp.pprint(bc.rpc.listaddressgroupings()))
             #------------------------------------------   
 
-
+    
+    
             print("=====START CONTRACT N1=====")
             res = lit1.rpc.ListContracts()
             #print(pp.pprint(res))
             print(res)
             print("=====END CONTRACT N1=====")
+
             print("=====START CONTRACT N2=====")
             res = lit2.rpc.ListContracts()
             #print(pp.pprint(res))
             print(res)
             print("=====END CONTRACT N2=====")
+
 
         print("ORACLE VALUE:", OraclesVal[0], "; oracle signature:", OraclesVal[0])
 
@@ -541,7 +552,9 @@ def t_11_0(env):
     run_t(env, params)
 
 
+
 # ----------------------------------------------------------------------------- 
+
 
 def t_1300_1(env):
     
@@ -630,6 +643,7 @@ def t_1300_1(env):
     run_t(env, params)
 
 
+
 # -----------------------------------------------------------------------------
 
 
@@ -665,7 +679,9 @@ def t_10_0(env):
     run_t(env, params)
 
 
+
 # -----------------------------------------------------------------------------  
+
 
 
 def t_10_1(env):

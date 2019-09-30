@@ -344,6 +344,7 @@ type SetContractFeePerByteReply struct {
 	Success bool
 }
 
+
 // SetContractFeePerByte sets the fee per byte for the contract.
 func (r *LitRPC) SetContractFeePerByte(args SetContractFeePerByteArgs,
 	reply *SetContractFeePerByteReply) error {
@@ -414,6 +415,9 @@ func (r *LitRPC) GetContractDivision(args GetContractDivisionArgs,
 
 	return nil
 }
+
+
+//-----------------------------------------------------------
 
 
 

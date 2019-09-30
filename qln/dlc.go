@@ -51,6 +51,7 @@ func (nd *LitNode) OfferDlc(peerIdx uint32, cIdx uint64) error {
 		return fmt.Errorf("The number of oracles have to be less than 8.")
 	}	
 
+
 	for o := uint32(0); o < c.OraclesNumber; o++ {
 
 		fmt.Printf("qln/dlc.go: OfferDlc(): o %d \n", o)
@@ -61,7 +62,8 @@ func (nd *LitNode) OfferDlc(peerIdx uint32, cIdx uint64) error {
 	
 		if c.OracleR[o] == nullBytes {
 			return fmt.Errorf("You need to set all %d R-points for the contract before offering it", c.OraclesNumber)
-		}
+		}		
+		
 	}
 
 	if c.OracleTimestamp == 0 {
@@ -312,6 +314,7 @@ func (nd *LitNode) DlcOfferHandler(msg lnutil.DlcOfferMsg, peer *RemotePeer) {
 
 	}
 
+	
 	c.OracleTimestamp = msg.Contract.OracleTimestamp
 	c.RefundTimestamp = msg.Contract.RefundTimestamp
 
@@ -796,19 +799,25 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 		kg.Step[2] = UseContractPayoutBase
 		privSpend, _ := wal.GetPriv(kg)
 
+
 		var pubOracleBytes [][33]byte
+
 		privOracle0, pubOracle0 := koblitz.PrivKeyFromBytes(koblitz.S256(), oraclesSig[0][:])
 		privContractOutput := lnutil.CombinePrivateKeys(privSpend, privOracle0)
+
 		var pubOracleBytes0 [33]byte
-		copy(pubOracleBytes0[:], pubOracle0.SerializeCompressed())
+		copy(pubOracleBytes0[:], pubOracle0.SerializeCompressed())		
 		pubOracleBytes = append(pubOracleBytes, pubOracleBytes0)
 
 		for i:=uint32(1); i < c.OraclesNumber; i++ {
+
 			privOracle, pubOracle := koblitz.PrivKeyFromBytes(koblitz.S256(), oraclesSig[i][:])
 			privContractOutput = lnutil.CombinePrivateKeys(privContractOutput, privOracle)
+
 			var pubOracleBytes1 [33]byte
 			copy(pubOracleBytes1[:], pubOracle.SerializeCompressed())
 			pubOracleBytes = append(pubOracleBytes, pubOracleBytes1)
+
 		}
 
 		settleScript := lnutil.DlcCommitScript(c.OurPayoutBase, c.TheirPayoutBase, pubOracleBytes , 5)

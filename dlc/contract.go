@@ -64,7 +64,9 @@ func (mgr *DlcManager) SetContractOracle(cIdx uint64, oIdx []uint64) error {
 		// Reset R point after oracle setting
 		c.OracleR[i-1] = [33]byte{}
 
+		fmt.Printf("c.Oracle[%d]: %x \n", i-1, c.OracleA[i-1])
 	}
+
 
 
 	mgr.SaveContract(c)
@@ -83,6 +85,9 @@ func (mgr *DlcManager) SetContractSettlementTime(cIdx, time uint64) error {
 			" unless the contract is in Draft state")
 	}
 	c.OracleTimestamp = time
+
+	fmt.Printf("c.OracleTimestamp %d \n", c.OracleTimestamp)
+
 	// Reset the R point
 	c.OracleR[0] = [33]byte{}
 	c.OracleR[1] = [33]byte{}
@@ -162,6 +167,8 @@ func (mgr *DlcManager) SetContractRPoint(cIdx uint64, rPoint [][33]byte) error {
 	for i:=uint32(0); i < c.OraclesNumber; i++{
 		c.OracleR[i] = rPoint[i]
 	}
+
+	
 
 	err = mgr.SaveContract(c)
 	if err != nil {
