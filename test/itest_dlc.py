@@ -134,6 +134,7 @@ def run_t(env, params):
         #------------
 
         res = lit1.rpc.ListOracles()
+        assert len(res) != 0, "Initial lis of oracles must be empty"
 
 
         oracles_pubkey = []
@@ -165,25 +166,11 @@ def run_t(env, params):
         assert res["Contract"]["Idx"] == 1, "GetContract does not works"
 
  
-        res = lit1.rpc.SetContractOraclesNumber(CIdx=contract["Contract"]["Idx"], OraclesNumber=3)
+        res = lit1.rpc.SetContractOraclesNumber(CIdx=contract["Contract"]["Idx"], OraclesNumber=oracles_number)
         assert res["Success"], "SetContractOraclesNumber does not works"
 
         res = lit1.rpc.SetContractOracle(CIdx=contract["Contract"]["Idx"], OIdx=oidxs)
         assert res["Success"], "SetContractOracle does not works"
-
-        time.sleep(1)
-
-        print("=====START CONTRACT N1=====")
-        res = lit1.rpc.ListContracts()
-        #print(pp.pprint(res))
-        print(res)
-        print("=====END CONTRACT N1=====")
-
-        print("=====START CONTRACT N2=====")
-        res = lit2.rpc.ListContracts()
-        #print(pp.pprint(res))
-        print(res)
-        print("=====END CONTRACT N2=====")
 
 
         # Since the oracle publishes data every 1 second (we set this time above), 
