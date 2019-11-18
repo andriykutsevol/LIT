@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/binary"
 	"fmt"
+	"os"
 
 	"github.com/mit-dci/lit/dlc"
 	"github.com/mit-dci/lit/lnutil"
@@ -760,6 +761,36 @@ func (r *LitRPC) CompactProofOfMsg(args CompactProofOfMsgArgs, reply *CompactPro
 	if PkScriptCompare == 0 {
 		reply.Success = true
 	}
+
+	return nil
+
+}
+
+
+
+
+//======================================================================
+
+
+type SellContractArgs struct {
+	OracleValue	int64
+	ValueOurs 	int64
+	ValueTheirs int64
+	OracleA		string
+	OracleR		string
+	TheirPayoutBase string
+	OurPayoutBase	string	
+	Tx		string
+}
+
+type SellContractReply struct {
+	Success		bool
+}
+
+
+func (r *LitRPC) SellContract(args SellContractArgs, reply *SellContractReply) error {
+
+	fmt.Printf("::%s:: SellContrac() \n", os.Args[6][len(os.Args[6])-4:])
 
 	return nil
 

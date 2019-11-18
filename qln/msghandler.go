@@ -2,7 +2,9 @@ package qln
 
 import (
 	"bytes"
+	"bufio"
 	"fmt"
+	"os"
 
 	"github.com/mit-dci/lit/logging"
 
@@ -543,6 +545,15 @@ func (nd *LitNode) HandleContractOPEvent(c *lnutil.DlcContract,
 				" for type %d", c.CoinType)
 		}
 
+		var buft bytes.Buffer
+		wtt := bufio.NewWriter(&buft)
+		opEvent.Tx.Serialize(wtt)
+		wtt.Flush()	
+		
+		fmt.Printf("::%s:: HandleContractOPEvent() 1: opEvent.Tx: %x \n", os.Args[6][len(os.Args[6])-4:], buft)
+
+		fmt.Printf("::%s:: HandleContractOPEvent() 2: opEvent.Tx: %s \n", os.Args[6][len(os.Args[6])-4:], lnutil.TxToString(opEvent.Tx))
+
 		nd.OpEventTx = opEvent.Tx
 		
 		pkhIsMine := false
@@ -550,10 +561,15 @@ func (nd *LitNode) HandleContractOPEvent(c *lnutil.DlcContract,
 		value := int64(0)
 		myPKHPkSript := lnutil.DirectWPKHScriptFromPKH(c.OurPayoutPKH)
 		for i, out := range opEvent.Tx.TxOut {
+
+			fmt.Printf("::%s:: HandleContractOPEvent() 3: out.PkScript: %x \n", os.Args[6][len(os.Args[6])-4:], out.PkScript)
+
 			if bytes.Equal(myPKHPkSript, out.PkScript) {
 				pkhIdx = uint32(i)
 				pkhIsMine = true
 				value = out.Value
+
+				fmt.Printf("::%s:: HandleContractOPEvent() 4: MINE out.PkScript: %x \n", os.Args[6][len(os.Args[6])-4:], out.PkScript)
 			}
 		}
 
@@ -569,7 +585,7 @@ func (nd *LitNode) HandleContractOPEvent(c *lnutil.DlcContract,
 			txClaim := wire.NewMsgTx()
 			txClaim.Version = 2
 
-			settleOutpoint := wire.OutPoint{Hash: opEvent.Tx.TxHash(), Index: pkhIdx}
+			
 			txClaim.AddTxIn(wire.NewTxIn(&settleOutpoint, nil, nil))
 
 			addr, err := wal.NewAdr()
@@ -592,8 +608,7 @@ func (nd *LitNode) HandleContractOPEvent(c *lnutil.DlcContract,
 			vsize := uint32(110)
 			fee := vsize * c.FeePerByte			
 
-			txClaim.AddTxOut(wire.NewTxOut(value-int64(fee),
-				lnutil.DirectWPKHScriptFromPKH(addr))) 
+			txClaim.AddTxOut(wire.NewTxOut(value-int64(fee), lnutil.DirectWPKHScriptFromPKH(addr))) 
 
 			var kg portxo.KeyGen
 			kg.Depth = 5
@@ -608,8 +623,7 @@ func (nd *LitNode) HandleContractOPEvent(c *lnutil.DlcContract,
 			hCache := txscript.NewTxSigHashes(txClaim)
 
 			// generate sig
-			txClaim.TxIn[0].Witness, err = txscript.WitnessScript(txClaim,
-				hCache, 0, value, myPKHPkSript, txscript.SigHashAll, priv, true)
+			txClaim.TxIn[0].Witness, err = txscript.WitnessScript(txClaim, hCache, 0, value, myPKHPkSript, txscript.SigHashAll, priv, true)
 
 			if err != nil {
 				return err

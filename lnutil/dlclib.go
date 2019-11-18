@@ -8,6 +8,8 @@ import (
 	"math/big"
 	"errors"
 
+	"os"
+
 	"github.com/mit-dci/lit/btcutil/chaincfg/chainhash"
 	"github.com/mit-dci/lit/crypto/koblitz"
 	"github.com/mit-dci/lit/logging"
@@ -636,6 +638,7 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 	// Ours = the one we generate & sign. Theirs (ours = false) = the one they
 	// generated, so we can use their sigs
 	if ours {
+		fmt.Printf("::%s:: SettlementTx: OURS \n", os.Args[6][len(os.Args[6])-4:]) 
 		if valueTheirs > 0 {
 			tx.AddTxOut(DlcOutput(c.TheirPayoutBase, c.OurPayoutBase, oraclesSigPub, valueTheirs))
 		}
@@ -643,7 +646,11 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 		if valueOurs > 0 {
 			tx.AddTxOut(wire.NewTxOut(valueOurs, DirectWPKHScriptFromPKH(c.OurPayoutPKH)))
 		}
+
 	} else {
+
+		fmt.Printf("::%s:: SettlementTx: THEIRS \n", os.Args[6][len(os.Args[6])-4:]) 
+
 		if valueOurs > 0 {
 			tx.AddTxOut(DlcOutput(c.OurPayoutBase, c.TheirPayoutBase, oraclesSigPub, valueOurs))
 		}
