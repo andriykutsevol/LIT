@@ -671,7 +671,7 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 func RefundTx(c *DlcContract) (*wire.MsgTx, error) {
 
 	vsize := uint32(169)
-	fee := int64(vsize * c.FeePerByte)
+	fee := int64(vsize * c.FeePerByte)/2
 
 	tx := wire.NewMsgTx()
 	tx.Version = 2

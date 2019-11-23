@@ -772,26 +772,31 @@ func (r *LitRPC) CompactProofOfMsg(args CompactProofOfMsgArgs, reply *CompactPro
 //======================================================================
 
 
-type SellContractArgs struct {
-	OracleValue	int64
-	ValueOurs 	int64
-	ValueTheirs int64
-	OracleA		string
-	OracleR		string
-	TheirPayoutBase string
-	OurPayoutBase	string	
-	Tx		string
+type NegotiateContractArgs struct {
+	CIdx uint64
+	PeerIdx uint32
+	DesiredOracleValue uint64
 }
 
-type SellContractReply struct {
-	Success		bool
+type NegotiateContractReply struct {
+	Success      bool
 }
 
 
-func (r *LitRPC) SellContract(args SellContractArgs, reply *SellContractReply) error {
+func (r *LitRPC) NegotiateContract(args NegotiateContractArgs, reply *NegotiateContractReply) error {
 
-	fmt.Printf("::%s:: SellContrac() \n", os.Args[6][len(os.Args[6])-4:])
+	fmt.Printf("::%s:: NegotiateContract() \n", os.Args[6][len(os.Args[6])-4:])
 
+
+	var err error
+
+	err = r.Node.NegotiateDlc(args.PeerIdx, args.CIdx, args.DesiredOracleValue)
+	if err != nil {
+		return err
+	}
+
+	reply.Success = true
 	return nil
 
 }
+
