@@ -11,6 +11,8 @@ import (
 	"github.com/mit-dci/lit/coinparam"
 	"github.com/mit-dci/lit/crypto/koblitz"
 	"github.com/mit-dci/lit/wire"
+
+	"os"
 )
 
 // RawTxInWitnessSignature returns the serialized ECDA signature for the input
@@ -26,8 +28,11 @@ func RawTxInWitnessSignature(tx *wire.MsgTx, sigHashes *TxSigHashes, idx int,
 		return nil, fmt.Errorf("cannot parse output script: %v", err)
 	}
 
-	hash := CalcWitnessSignatureHash(parsedScript, sigHashes, hashType, tx,
-		idx, amt)
+	hash := CalcWitnessSignatureHash(parsedScript, sigHashes, hashType, tx, idx, amt)
+
+
+	fmt.Printf("::%s:: RawTxInWitnessSignature(): hash %x \n", os.Args[6][len(os.Args[6])-4:], hash)
+
 	signature, err := key.Sign(hash)
 	if err != nil {
 		return nil, fmt.Errorf("cannot sign tx input: %s", err)

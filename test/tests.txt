@@ -56,7 +56,7 @@
 # the k value for the particular contract she attempted to double-report.
 #checkoraclefraud 1
 
-negotiatecontract 3
+negotiatecontract 2 forward
 
 
 

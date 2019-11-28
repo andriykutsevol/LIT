@@ -62,6 +62,7 @@ const (
 	MSGID_DLC_CONTRACTACK         = 0x93 // Acknowledge an acceptance
 	MSGID_DLC_CONTRACTFUNDINGSIGS = 0x94 // Funding signatures
 	MSGID_DLC_SIGPROOF            = 0x95 // Sigproof
+	MSGID_DLC_NEGOTIATE           = 0x96 // Negotiate contract
 
 	//Dual funding messages
 	MSGID_DUALFUNDINGREQ     = 0xA0 // Requests funding details (UTXOs, Change address, Pubkey), including our own details and amount needed.
@@ -182,6 +183,8 @@ func LitMsgFromBytes(b []byte, peerid uint32) (LitMsg, error) {
 		return NewDlcContractFundingSigsMsgFromBytes(b, peerid)
 	case MSGID_DLC_SIGPROOF:
 		return NewDlcContractSigProofMsgFromBytes(b, peerid)
+	case MSGID_DLC_NEGOTIATE:
+		return NewDlcContractNegotiateMsgFromBytes(b, peerid)		
 
 	case MSGID_REMOTE_RPCREQUEST:
 		return NewRemoteControlRpcRequestMsgFromBytes(b, peerid)
@@ -1744,7 +1747,10 @@ type DlcOfferAcceptMsg struct {
 	OurFundMultisigPub [33]byte
 	// The Pubkey to be used to in the contract settlement
 	OurPayoutBase [33]byte
+	// OurRefundPKH
 	OurRefundPKH [20]byte
+	// We can freely exchange refund signatures because 
+	// there is a locktime variable in the transaction.
 	OurrefundTxSig64 [64]byte
 	// The PKH to be paid to in the contract settlement
 	OurPayoutPKH [20]byte
@@ -2550,4 +2556,77 @@ func (msg EndChunksMsg) Peer() uint32 {
 
 func (msg EndChunksMsg) MsgType() uint8 {
 	return MSGID_CHUNKS_END
+}
+
+
+//---------------------------------------------------------------
+
+
+type DlcContractNegotiateMsg struct {
+	// Index of the peer we are negotiating the contract with
+	PeerIdx uint32
+	// The index of the contract on the peer
+	Idx uint64
+
+	DesiredOracleValue uint64
+	OurnegotiateTxSig64 [64]byte
+}
+
+func NewDlcContractNegotiateMsg(contract *DlcContract) DlcContractNegotiateMsg {
+
+	// TODO: wire.ReadVarInt(buf, 0) returns only uint64, why?
+	DesiredOracleValue := uint64(contract.DesiredOracleValue)
+
+	msg := new(DlcContractNegotiateMsg)
+	msg.PeerIdx = contract.PeerIdx
+	msg.Idx 	= contract.TheirIdx
+	msg.DesiredOracleValue = DesiredOracleValue
+	msg.OurnegotiateTxSig64 = contract.OurnegotiateTxSig64
+
+	return *msg
+
+}
+
+
+func NewDlcContractNegotiateMsgFromBytes(b []byte, peerIdx uint32) (DlcContractNegotiateMsg, error) {
+
+	msg := new(DlcContractNegotiateMsg)
+	msg.PeerIdx = peerIdx
+
+	buf := bytes.NewBuffer(b[1:]) // get rid of messageType
+
+	msg.Idx, _ = wire.ReadVarInt(buf, 0)
+
+	msg.DesiredOracleValue, _ = wire.ReadVarInt(buf, 0)
+
+	copy(msg.OurnegotiateTxSig64[:], buf.Next(64))
+
+	return *msg, nil
+
+}
+
+
+
+func (msg DlcContractNegotiateMsg) Bytes() []byte {
+	var buf bytes.Buffer
+
+	buf.WriteByte(msg.MsgType())
+
+	wire.WriteVarInt(&buf, 0, msg.Idx)
+	wire.WriteVarInt(&buf, 0, msg.DesiredOracleValue)	
+	buf.Write(msg.OurnegotiateTxSig64[:])
+
+	return buf.Bytes()
+
+}	
+
+
+
+func (msg DlcContractNegotiateMsg) Peer() uint32 {
+	return msg.PeerIdx
+}
+
+
+func (msg DlcContractNegotiateMsg) MsgType() uint8 {
+	return MSGID_DLC_NEGOTIATE
 }

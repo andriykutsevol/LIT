@@ -49,6 +49,7 @@ func (nd *LitNode) registerHandlers() {
 	mp.DefineMessage(lnutil.MSGID_DLC_CONTRACTACK, makeNeoOmniParser(lnutil.MSGID_DLC_CONTRACTACK), hf)
 	mp.DefineMessage(lnutil.MSGID_DLC_CONTRACTFUNDINGSIGS, makeNeoOmniParser(lnutil.MSGID_DLC_CONTRACTFUNDINGSIGS), hf)
 	mp.DefineMessage(lnutil.MSGID_DLC_SIGPROOF, makeNeoOmniParser(lnutil.MSGID_DLC_SIGPROOF), hf)
+	mp.DefineMessage(lnutil.MSGID_DLC_NEGOTIATE, makeNeoOmniParser(lnutil.MSGID_DLC_NEGOTIATE), hf)
 	mp.DefineMessage(lnutil.MSGID_DUALFUNDINGREQ, makeNeoOmniParser(lnutil.MSGID_DUALFUNDINGREQ), hf)
 	mp.DefineMessage(lnutil.MSGID_DUALFUNDINGACCEPT, makeNeoOmniParser(lnutil.MSGID_DUALFUNDINGACCEPT), hf)
 	mp.DefineMessage(lnutil.MSGID_DUALFUNDINGDECL, makeNeoOmniParser(lnutil.MSGID_DUALFUNDINGDECL), hf)
@@ -143,6 +144,9 @@ func (nd *LitNode) PeerHandler(msg lnutil.LitMsg, q *Qchan, peer *RemotePeer) er
 		if msg.MsgType() == lnutil.MSGID_DLC_SIGPROOF {
 			nd.DlcSigProofHandler(msg.(lnutil.DlcContractSigProofMsg), peer)
 		}
+		if msg.MsgType() == lnutil.MSGID_DLC_NEGOTIATE {
+			nd.DlcNegotiateContractHandler(msg.(lnutil.DlcContractNegotiateMsg), peer)
+		}		
 
 	case 0xB0: // remote control
 		if msg.MsgType() == lnutil.MSGID_REMOTE_RPCREQUEST {
@@ -585,7 +589,7 @@ func (nd *LitNode) HandleContractOPEvent(c *lnutil.DlcContract,
 			txClaim := wire.NewMsgTx()
 			txClaim.Version = 2
 
-			
+			settleOutpoint := wire.OutPoint{Hash: opEvent.Tx.TxHash(), Index: pkhIdx}
 			txClaim.AddTxIn(wire.NewTxIn(&settleOutpoint, nil, nil))
 
 			addr, err := wal.NewAdr()
