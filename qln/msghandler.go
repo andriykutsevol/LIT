@@ -50,6 +50,8 @@ func (nd *LitNode) registerHandlers() {
 	mp.DefineMessage(lnutil.MSGID_DLC_CONTRACTFUNDINGSIGS, makeNeoOmniParser(lnutil.MSGID_DLC_CONTRACTFUNDINGSIGS), hf)
 	mp.DefineMessage(lnutil.MSGID_DLC_SIGPROOF, makeNeoOmniParser(lnutil.MSGID_DLC_SIGPROOF), hf)
 	mp.DefineMessage(lnutil.MSGID_DLC_NEGOTIATE, makeNeoOmniParser(lnutil.MSGID_DLC_NEGOTIATE), hf)
+	mp.DefineMessage(lnutil.MSGID_DLC_ACCEPTNEGOTIATE, makeNeoOmniParser(lnutil.MSGID_DLC_ACCEPTNEGOTIATE), hf)
+	mp.DefineMessage(lnutil.MSGID_DLC_DECLINENEGOTIATE, makeNeoOmniParser(lnutil.MSGID_DLC_DECLINENEGOTIATE), hf)
 	mp.DefineMessage(lnutil.MSGID_DUALFUNDINGREQ, makeNeoOmniParser(lnutil.MSGID_DUALFUNDINGREQ), hf)
 	mp.DefineMessage(lnutil.MSGID_DUALFUNDINGACCEPT, makeNeoOmniParser(lnutil.MSGID_DUALFUNDINGACCEPT), hf)
 	mp.DefineMessage(lnutil.MSGID_DUALFUNDINGDECL, makeNeoOmniParser(lnutil.MSGID_DUALFUNDINGDECL), hf)
@@ -146,7 +148,15 @@ func (nd *LitNode) PeerHandler(msg lnutil.LitMsg, q *Qchan, peer *RemotePeer) er
 		}
 		if msg.MsgType() == lnutil.MSGID_DLC_NEGOTIATE {
 			nd.DlcNegotiateContractHandler(msg.(lnutil.DlcContractNegotiateMsg), peer)
-		}		
+		}
+
+		if msg.MsgType() == lnutil.MSGID_DLC_ACCEPTNEGOTIATE {
+			nd.DlcAcceptNegotiateAck(msg.(lnutil.DlcContractAcceptNegotiateMsg), peer)
+		}
+		
+		if msg.MsgType() == lnutil.MSGID_DLC_DECLINENEGOTIATE {
+			nd.DlcDeclineNegotiateAck(msg.(lnutil.DlcContractDeclineNegotiateMsg), peer)
+		}			
 
 	case 0xB0: // remote control
 		if msg.MsgType() == lnutil.MSGID_REMOTE_RPCREQUEST {

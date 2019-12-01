@@ -815,13 +815,11 @@ type NegotiateContractRespondReply struct {
 func (r *LitRPC) NegotiateContractRespond(args NegotiateContractRespondArgs, reply *NegotiateContractRespondReply) error {
 	var err error
 
-	// if args.AcceptOrDecline {
-	// 	err = r.Node.AcceptDlc(args.CIdx)
-	// } else {
-	// 	err = r.Node.DeclineDlc(args.CIdx, 0x01)
-	// }
+
 	if args.AcceptOrDecline {
-		err = r.Node.AcceptNegotiateDlc(args.CIdx)
+		err = r.Node.DlcAcceptNegotiate(args.CIdx)
+	}else{
+		err = r.Node.DlcDeclineNegotiate(args.CIdx)
 	}
 
 	if err != nil {

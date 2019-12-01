@@ -1002,7 +1002,7 @@ func (nd *LitNode) RefundContract(cIdx uint64) (bool, error) {
 		return false, err
 	}
 
-	if c.Status != lnutil.ContractStatusActive {
+	if (c.Status != lnutil.ContractStatusActive) && (c.Status != lnutil.ContractStatusNegotiateDeclinedByHim) {
 		return false, errors.New("You cannot refund a contract that is not in active stage")
 	}
 
@@ -1044,7 +1044,7 @@ func (nd *LitNode) DlcNegotiateContract(cIdx uint64, DesiredOracleValue int64) e
 	}
 
 
-	if c.Status != lnutil.ContractStatusActive {
+	if (c.Status != lnutil.ContractStatusActive) && (c.Status != lnutil.ContractStatusNegotiateDeclinedByHim) {
 		return fmt.Errorf("You cannot negotiate a contract that is not in active stage")
 	}
 
@@ -1101,7 +1101,7 @@ func (nd *LitNode) DlcNegotiateContract(cIdx uint64, DesiredOracleValue int64) e
 }
 
 
-// DlcOfferHandler
+// DlcNegotiateContractHandler
 func (nd *LitNode) DlcNegotiateContractHandler(msg lnutil.DlcContractNegotiateMsg, peer *RemotePeer) error {
 	//Тут он принимает запрос. Т.е просто видит что он есть.
 	//Он получает DlcNegotiateMsg. Там подпись для DesiredOracleValue
@@ -1208,7 +1208,7 @@ func (nd *LitNode) DlcNegotiateContractHandler(msg lnutil.DlcContractNegotiateMs
 }
 
 
-func (nd *LitNode) AcceptNegotiateDlc(cIdx uint64) error {
+func (nd *LitNode) DlcAcceptNegotiate(cIdx uint64) error {
 	//Тут он может согласится
 	//Если он соглашается, то публикует транзакцию и шлет Ack
 
@@ -1222,8 +1222,13 @@ func (nd *LitNode) AcceptNegotiateDlc(cIdx uint64) error {
 	fmt.Printf("::%s:: AcceptNegotiateDlc(): c.DesiredOracleValue: %d \n", os.Args[6][len(os.Args[6])-4:], c.DesiredOracleValue)	
 	
 	if c.Status != lnutil.ContractStatusNegotiatingToMe {
-		return fmt.Errorf("You cannot negotiate a contract unless it is in the 'Negotiate' state")
+		return fmt.Errorf("You cannot accept negotiate a contract unless it is in the 'Negotiating to me' state")
 	}
+
+
+	if !nd.ConnectedToPeer(c.PeerIdx) {
+		return fmt.Errorf("You are not connected to peer %d, do that first", c.PeerIdx)
+	}	
 
 	var negotiateTx *wire.MsgTx
 	negotiateTx, err = lnutil.NegotiateTx(c)
@@ -1268,6 +1273,7 @@ func (nd *LitNode) AcceptNegotiateDlc(cIdx uint64) error {
 
 	err = wal.DirectSendTx(negotiateTx)
 
+	c.Status = lnutil.ContractStatusNegotiatedToMe
 
 	err = nd.DlcManager.SaveContract(c)
 	if err != nil {
@@ -1275,25 +1281,103 @@ func (nd *LitNode) AcceptNegotiateDlc(cIdx uint64) error {
 		return err
 	}	
 
+	// Send ACK
+	outMsg := lnutil.NewDlcAcceptNegotiateMsg(c, negotiateTx)
+	nd.tmpSendLitMsg(outMsg)	
+
 
 	return nil
 }
 
 
-// func (nd *LitNode) DeclineNegotiateDlc() error {
-		// Или отказатся
-		// Шлет Ack
-// }
+func (nd *LitNode) DlcAcceptNegotiateAck(msg lnutil.DlcContractAcceptNegotiateMsg, peer *RemotePeer) error {
+	//Я вижу что он принял и все
+
+	c, err := nd.DlcManager.LoadContract(msg.Idx)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("::%s:: DlcAcceptNegotiateAck() msg: %+v \n", os.Args[6][len(os.Args[6])-4:], msg)
+
+	c.Status = lnutil.ContractStatusNegotiatedByMe
+
+	err = nd.DlcManager.SaveContract(c)
+	if err != nil {
+		logging.Errorf("DlcAcceptNegotiateAck SaveContract err %s\n", err.Error())
+		return err
+	}		
+
+	return nil
+
+}
 
 
-// func (nd *LitNode) DlcNegotiateDeclineAck(msg lnutil.DlcOfferDeclineMsg, peer *RemotePeer) {
-		// Я вижу что он отказался
-// }
+
+func (nd *LitNode) DlcDeclineNegotiate(cIdx uint64) error {
+	//Или отказатся
+	//Шлет Ack
+
+	c, err := nd.DlcManager.LoadContract(cIdx)
+	if err != nil {
+		return err
+	}
+	
+	if !nd.ConnectedToPeer(c.PeerIdx) {
+		return fmt.Errorf("You are not connected to peer %d, do that first", c.PeerIdx)
+	}
+	
+	
+	if c.Status != lnutil.ContractStatusNegotiatingToMe {
+		return fmt.Errorf("You cannot decline negotiate a contract unless it is in the 'Negotiating to me' state")
+	}
 
 
-// func (nd *LitNode) AcceptNegotiateDlcAck() error {
-		// Я вижу что он принял и все
-// }
+
+	c.Status = lnutil.ContractStatusNegotiateDeclinedByMe
+
+	err = nd.DlcManager.SaveContract(c)
+	if err != nil {
+		logging.Errorf("DlcAcceptNegotiateAck SaveContract err %s\n", err.Error())
+		return err
+	}
+
+
+	fmt.Printf("::%s:: DlcDeclineNegotiate() \n", os.Args[6][len(os.Args[6])-4:])
+
+
+	// Send ACK
+	outMsg := lnutil.NewDlcContractDeclineNegotiateMsg(c)
+	nd.tmpSendLitMsg(outMsg)
+	
+	return nil
+
+}
+
+
+func (nd *LitNode) DlcDeclineNegotiateAck(msg lnutil.DlcContractDeclineNegotiateMsg, peer *RemotePeer) error {
+	//Я вижу что он отказался
+
+	c, err := nd.DlcManager.LoadContract(msg.Idx)
+	if err != nil {
+		return err
+	}	
+
+	fmt.Printf("::%s:: DlcDeclineNegotiateAck() \n", os.Args[6][len(os.Args[6])-4:])
+
+
+	c.Status = lnutil.ContractStatusNegotiateDeclinedByHim
+
+	err = nd.DlcManager.SaveContract(c)
+	if err != nil {
+		logging.Errorf("DlcDeclineNegotiateAck SaveContract err %s\n", err.Error())
+		return err
+	}		
+
+	return nil
+}
+
+
 
 
 

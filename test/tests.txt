@@ -36,7 +36,7 @@
 # dlc 2 t_1300_1
 
 # test at left edge
-dlc 2 t_10_0
+#dlc 2 t_10_0
 
 # test at left edge from the counterparty
 #dlc 2 t_10_1
@@ -47,8 +47,8 @@ dlc 2 t_10_0
 # test at right edge from the counterparty
 #dlc 2 t_20_1
 
-#dlcrefund 2 forward
-#dlcrefund 2 reverse
+dlcrefund 2 forward
+dlcrefund 2 reverse
 
 # If Olivia attempts to publicly report two different prices (in order to
 # assume the role of a counterparty in a contract and “win” the bet regardless

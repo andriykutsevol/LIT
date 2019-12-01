@@ -45,7 +45,8 @@ const (
 	ContractStatusNegotiatingToMe  		DlcContractStatus = 12
 	ContractStatusNegotiatedByMe  		DlcContractStatus = 13
 	ContractStatusNegotiatedToMe  		DlcContractStatus = 14
-	ContractStatusNegotiateDeclined     DlcContractStatus = 15
+	ContractStatusNegotiateDeclinedByMe     DlcContractStatus = 15
+	ContractStatusNegotiateDeclinedByHim    DlcContractStatus = 16
 )
 
 // scalarSize is the size of an encoded big endian scalar.
@@ -820,7 +821,7 @@ func NegotiateTx(c *DlcContract) (*wire.MsgTx, error) {
 	tx.AddTxIn(txin)
 
 
-	// TODO: Handle condition
+	// TODO: Handle like in SettlementTx
 	if valueours > fee {
 		ourRefScript := DirectWPKHScriptFromPKH(c.OurRefundPKH)
 		ourOutput := wire.NewTxOut(valueours - fee, ourRefScript)
@@ -831,7 +832,7 @@ func NegotiateTx(c *DlcContract) (*wire.MsgTx, error) {
 
 	fmt.Printf("::%s:: NegotiateTx(): valueours - fee: %d \n", os.Args[6][len(os.Args[6])-4:], valueours - fee)
 
-	// TODO: Handle condition
+	// TODO: Handle like in SettlementTx
 	if valueTheirs > fee {
 		theirRefScript := DirectWPKHScriptFromPKH(c.TheirRefundPKH)
 		theirOutput := wire.NewTxOut(valueTheirs - fee, theirRefScript)

@@ -258,10 +258,10 @@ def run_t(env, params):
 
         time.sleep(3)
 
-        #res = lit2.rpc.ContractRespond(AcceptOrDecline=True, CIdx=1)
-        #assert res["Success"], "ContractRespond on lit2 does not works"
+        # NegotiateContractRespondResult = lit2.rpc.NegotiateContractRespond(AcceptOrDecline=True, CIdx=contract["Contract"]["Idx"])
+        # assert res["Success"], "NegotiateContractRespond on lit2 does not works"
 
-        NegotiateContractRespondResult = lit2.rpc.NegotiateContractRespond(AcceptOrDecline=True, CIdx=contract["Contract"]["Idx"])
+        NegotiateContractRespondResult = lit2.rpc.NegotiateContractRespond(AcceptOrDecline=False, CIdx=contract["Contract"]["Idx"])
         assert res["Success"], "NegotiateContractRespond on lit2 does not works"
 
 
@@ -281,7 +281,7 @@ def run_t(env, params):
 def forward(env):
     
     oracles_number = 3
-    oracle_value = 10
+    oracle_value = 20
     node_to_settle = 0
 
     valueFullyOurs=10
