@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"errors"
@@ -448,6 +449,16 @@ func DlcCommitScript(pubKeyPeer, ourPubKey [33]byte, oraclesSigPub [][33]byte, d
 		combinedPubKey = CombinePubs(combinedPubKey,  oraclesSigPub[i])
 	}
 
+
+	neworaclepubkeystring := "02b24f7efcfb91f340c222638c58fd644a493a52312dd01966e07d715d4a0462de"
+
+	decoded, _ := hex.DecodeString(neworaclepubkeystring)
+
+	var neworaclepubkey [33]byte
+	copy(neworaclepubkey[:], decoded[:])
+
+	combinedPubKey = CombinePubs(combinedPubKey,  neworaclepubkey)	
+
 	return CommitScript(combinedPubKey, ourPubKey, delay)
 }
 
@@ -652,9 +663,23 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 			return nil, err
 		}
 
+		fmt.Printf("::%s:: SettlementTx(): OraclePubkey[%d] %x \n", os.Args[6][len(os.Args[6])-4:], i, res)
+
 		oraclesSigPub = append(oraclesSigPub, res)
 
 	}
+
+	neworaclepubkeystring := "02b24f7efcfb91f340c222638c58fd644a493a52312dd01966e07d715d4a0462de"
+
+	decoded, _ := hex.DecodeString(neworaclepubkeystring)
+
+	var neworaclepubkey [33]byte
+	copy(neworaclepubkey[:], decoded[:])
+
+	oraclesSigPub = append(oraclesSigPub, neworaclepubkey)
+
+
+
 
 	// Ours = the one we generate & sign. Theirs (ours = false) = the one they
 	// generated, so we can use their sigs

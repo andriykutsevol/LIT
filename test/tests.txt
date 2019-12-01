@@ -36,7 +36,7 @@
 # dlc 2 t_1300_1
 
 # test at left edge
-#dlc 2 t_10_0
+dlc 2 t_10_0
 
 # test at left edge from the counterparty
 #dlc 2 t_10_1
@@ -56,7 +56,7 @@
 # the k value for the particular contract she attempted to double-report.
 #checkoraclefraud 1
 
-negotiatecontract 2 forward
+#negotiatecontract 2 forward
 
 
 

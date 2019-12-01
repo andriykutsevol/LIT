@@ -7,6 +7,8 @@ import (
 	"bufio"
 	"errors"
 
+	"encoding/hex"
+
 	"github.com/mit-dci/lit/btcutil"
 	"github.com/mit-dci/lit/btcutil/txscript"
 	"github.com/mit-dci/lit/btcutil/txsort"
@@ -910,6 +912,8 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 
 		var pubOracleBytes [][33]byte
 
+		fmt.Printf("::%s:: SettleContract(): ClaimTx: oraclesSig[0] %x \n", os.Args[6][len(os.Args[6])-4:], oraclesSig[0])	
+
 		privOracle0, pubOracle0 := koblitz.PrivKeyFromBytes(koblitz.S256(), oraclesSig[0][:])
 		privContractOutput := lnutil.CombinePrivateKeys(privSpend, privOracle0)
 
@@ -920,6 +924,9 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 		for i:=uint32(1); i < c.OraclesNumber; i++ {
 
 			privOracle, pubOracle := koblitz.PrivKeyFromBytes(koblitz.S256(), oraclesSig[i][:])
+
+			fmt.Printf("::%s:: SettleContract(): ClaimTx: oraclesSig[%d] %x \n", os.Args[6][len(os.Args[6])-4:], i, oraclesSig[i])
+
 			privContractOutput = lnutil.CombinePrivateKeys(privContractOutput, privOracle)
 
 			var pubOracleBytes1 [33]byte
@@ -927,6 +934,18 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 			pubOracleBytes = append(pubOracleBytes, pubOracleBytes1)
 
 		}
+
+
+		neworaclesigstring := "3d8ad3c300c6ea89fb9357a4f6b8188399be4e1f5dcf871551a3099fccf89da3"
+
+		decoded, _ := hex.DecodeString(neworaclesigstring)
+	
+		var neworaclesig [33]byte
+		copy(neworaclesig[:], decoded[:])
+	
+		pubOracleBytes = append(pubOracleBytes, neworaclesig)
+
+		
 
 		settleScript := lnutil.DlcCommitScript(c.OurPayoutBase, c.TheirPayoutBase, pubOracleBytes , 5)
 		err = nd.SignClaimTx(txClaim, settleTx.TxOut[0].Value, settleScript, privContractOutput, false)
