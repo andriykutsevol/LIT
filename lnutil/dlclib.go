@@ -23,6 +23,8 @@ import (
 
 )
 
+var _,_ = hex.DecodeString("")
+
 // DlcContractStatus is an enumeration containing the various statuses a
 // contract can have
 type DlcContractStatus int
@@ -450,14 +452,14 @@ func DlcCommitScript(pubKeyPeer, ourPubKey [33]byte, oraclesSigPub [][33]byte, d
 	}
 
 
-	neworaclepubkeystring := "02b24f7efcfb91f340c222638c58fd644a493a52312dd01966e07d715d4a0462de"
+	// neworaclepubkeystring := "02b24f7efcfb91f340c222638c58fd644a493a52312dd01966e07d715d4a0462de"
 
-	decoded, _ := hex.DecodeString(neworaclepubkeystring)
+	// decoded, _ := hex.DecodeString(neworaclepubkeystring)
 
-	var neworaclepubkey [33]byte
-	copy(neworaclepubkey[:], decoded[:])
+	// var neworaclepubkey [33]byte
+	// copy(neworaclepubkey[:], decoded[:])
 
-	combinedPubKey = CombinePubs(combinedPubKey,  neworaclepubkey)	
+	// combinedPubKey = CombinePubs(combinedPubKey,  neworaclepubkey)	
 
 	return CommitScript(combinedPubKey, ourPubKey, delay)
 }
@@ -669,14 +671,14 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 
 	}
 
-	neworaclepubkeystring := "02b24f7efcfb91f340c222638c58fd644a493a52312dd01966e07d715d4a0462de"
+	// neworaclepubkeystring := "02b24f7efcfb91f340c222638c58fd644a493a52312dd01966e07d715d4a0462de"
 
-	decoded, _ := hex.DecodeString(neworaclepubkeystring)
+	// decoded, _ := hex.DecodeString(neworaclepubkeystring)
 
-	var neworaclepubkey [33]byte
-	copy(neworaclepubkey[:], decoded[:])
+	// var neworaclepubkey [33]byte
+	// copy(neworaclepubkey[:], decoded[:])
 
-	oraclesSigPub = append(oraclesSigPub, neworaclepubkey)
+	// oraclesSigPub = append(oraclesSigPub, neworaclepubkey)
 
 
 

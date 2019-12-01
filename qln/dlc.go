@@ -22,6 +22,8 @@ import (
 	"github.com/mit-dci/lit/consts"
 )
 
+var _,_ = hex.DecodeString("")
+
 func (nd *LitNode) AddContract() (*lnutil.DlcContract, error) {
 
 	c, err := nd.DlcManager.AddContract()
@@ -936,14 +938,14 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 		}
 
 
-		neworaclesigstring := "3d8ad3c300c6ea89fb9357a4f6b8188399be4e1f5dcf871551a3099fccf89da3"
+		// neworaclesigstring := "3d8ad3c300c6ea89fb9357a4f6b8188399be4e1f5dcf871551a3099fccf89da3"
 
-		decoded, _ := hex.DecodeString(neworaclesigstring)
+		// decoded, _ := hex.DecodeString(neworaclesigstring)
 	
-		var neworaclesig [33]byte
-		copy(neworaclesig[:], decoded[:])
+		// var neworaclesig [33]byte
+		// copy(neworaclesig[:], decoded[:])
 	
-		pubOracleBytes = append(pubOracleBytes, neworaclesig)
+		// pubOracleBytes = append(pubOracleBytes, neworaclesig)
 
 		
 
