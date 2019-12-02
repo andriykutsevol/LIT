@@ -810,7 +810,15 @@ func NegotiateTx(c *DlcContract) (*wire.MsgTx, error) {
 
 	fmt.Printf("::%s:: NegotiateTx(): valueTheirs: %d \n", os.Args[6][len(os.Args[6])-4:], valueTheirs)
 	
-	vsize := uint32(169)
+
+	var vsize uint32
+	if (valueours == 0) || (valueTheirs == 0){
+		vsize = 138
+	}else{
+		vsize = 169
+	}
+
+
 	fee := int64(vsize * c.FeePerByte)
 
 	

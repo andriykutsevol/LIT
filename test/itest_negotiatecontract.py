@@ -27,6 +27,9 @@ def run_t(env, params):
 
         node_to_refund = params[7]
 
+        accept = params[8]
+        desiredOracleValue = params[9]
+
         bc = env.bitcoind
 
         #------------
@@ -230,7 +233,7 @@ def run_t(env, params):
         res = lit2.rpc.ContractRespond(AcceptOrDecline=True, CIdx=1)
         assert res["Success"], "ContractRespond on lit2 does not works"
 
-        time.sleep(3)
+        time.sleep(3)    
 
         #------------------------------------------
         
@@ -251,22 +254,64 @@ def run_t(env, params):
         env.generate_block()
         time.sleep(2)
 
+        bals1 = lit1.get_balance_info()
+        print('lit1 balance after accept:', bals1['TxoTotal'], 'in txos,', bals1['ChanTotal'], 'in chans')
 
-        desiredOracleValue=9
+        bals2 = lit2.get_balance_info()
+        print('lit2 balance after accept:', bals2['TxoTotal'], 'in txos,', bals2['ChanTotal'], 'in chans')
+
 
         NegotiateContractResult =  lit1.rpc.DlcNegotiateContract (CIdx=contract["Contract"]["Idx"], DesiredOracleValue=desiredOracleValue)
 
         time.sleep(3)
 
-        # NegotiateContractRespondResult = lit2.rpc.NegotiateContractRespond(AcceptOrDecline=True, CIdx=contract["Contract"]["Idx"])
-        # assert res["Success"], "NegotiateContractRespond on lit2 does not works"
-
-        NegotiateContractRespondResult = lit2.rpc.NegotiateContractRespond(AcceptOrDecline=False, CIdx=contract["Contract"]["Idx"])
+        NegotiateContractRespondResult = lit2.rpc.NegotiateContractRespond(AcceptOrDecline=accept, CIdx=contract["Contract"]["Idx"])
         assert res["Success"], "NegotiateContractRespond on lit2 does not works"
-
 
         time.sleep(3)
 
+        env.generate_block()
+        time.sleep(2)
+
+        if accept:
+
+            # desiredOracleValue = 10
+            # ::lit1:: NegotiateTx(): valueours - fee: -11040 
+            # ::lit1:: NegotiateTx(): valueTheirs - fee: 19988960
+            # lit1 balance after negotiate: 109978880 in txos, 0 in chans
+            # lit2 balance after negotiate: 89989920 in txos, 0 in chans        
+
+            # desiredOracleValue = 11
+            # ::lit1:: NegotiateTx(): valueours - fee: 1986480 
+            # ::lit1:: NegotiateTx(): valueTheirs - fee: 17986480 
+            # lit1 balance after negotiate: 107976400 in txos, 0 in chans
+            # lit2 balance after negotiate: 91976400 in txos, 0 in chans
+
+            # desiredOracleValue = 20
+            # ::lit1:: NegotiateTx(): valueours - fee: 19988960 
+            # ::lit1:: NegotiateTx(): valueTheirs - fee: -11040 
+            # lit1 balance after negotiate: 89989920 in txos, 0 in chans
+            # lit2 balance after negotiate: 109978880 in txos, 0 in chans
+
+
+
+            bals1 = lit1.get_balance_info()
+            print('lit1 balance after negotiate:', bals1['TxoTotal'], 'in txos,', bals1['ChanTotal'], 'in chans')
+            assert bals1['TxoTotal'] == 107976400, "The resulting lit1 node balance does not match."
+
+            bals2 = lit2.get_balance_info()
+            print('lit2 balance after negotiate:', bals2['TxoTotal'], 'in txos,', bals2['ChanTotal'], 'in chans')
+            assert bals2['TxoTotal'] == 91976400, "The resulting lit1 node balance does not match."
+
+        else:
+
+            bals1 = lit1.get_balance_info()
+            print('lit1 balance after negotiate:', bals1['TxoTotal'], 'in txos,', bals1['ChanTotal'], 'in chans')
+            assert bals1['TxoTotal'] == 89989920, "The resulting lit1 node balance does not match."
+
+            bals2 = lit2.get_balance_info()
+            print('lit2 balance after negotiate:', bals2['TxoTotal'], 'in txos,', bals2['ChanTotal'], 'in chans')
+            assert bals2['TxoTotal'] == 89989920, "The resulting lit1 node balance does not match."
 
 
     except BaseException as be:
@@ -278,7 +323,7 @@ def run_t(env, params):
 
 
 
-def forward(env):
+def accept(env):
     
     oracles_number = 3
     oracle_value = 20
@@ -292,6 +337,32 @@ def forward(env):
 
     feeperbyte = 80
 
-    params = [lit_funding_amt, contract_funding_amt, oracles_number, oracle_value, valueFullyOurs, valueFullyTheirs, feeperbyte, 0]
+    accept = True
+    desiredOracleValue = 11
+
+    params = [lit_funding_amt, contract_funding_amt, oracles_number, oracle_value, valueFullyOurs, valueFullyTheirs, feeperbyte, 0, accept, desiredOracleValue]
 
     run_t(env, params)
+
+
+
+def decline(env):
+    
+    oracles_number = 3
+    oracle_value = 11
+    node_to_settle = 0
+
+    valueFullyOurs=10
+    valueFullyTheirs=20
+
+    lit_funding_amt =      1     # 1 BTC
+    contract_funding_amt = 10000000     # satoshi
+
+    feeperbyte = 80
+
+    accept = False
+    desiredOracleValue = 11
+
+    params = [lit_funding_amt, contract_funding_amt, oracles_number, oracle_value, valueFullyOurs, valueFullyTheirs, feeperbyte, 0, accept, desiredOracleValue]
+
+    run_t(env, params)    
