@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/binary"
 	"fmt"
-	"os"
 
 	"github.com/mit-dci/lit/dlc"
 	"github.com/mit-dci/lit/lnutil"
@@ -783,9 +782,6 @@ type NegotiateContractReply struct {
 
 
 func (r *LitRPC) DlcNegotiateContract(args NegotiateContractArgs, reply *NegotiateContractReply) error {
-
-	fmt.Printf("::%s:: NegotiateContract() \n", os.Args[6][len(os.Args[6])-4:])
-
 
 	var err error
 

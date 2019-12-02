@@ -2,9 +2,7 @@ package qln
 
 import (
 	"bytes"
-	"bufio"
 	"fmt"
-	"os"
 
 	"github.com/mit-dci/lit/logging"
 
@@ -559,15 +557,6 @@ func (nd *LitNode) HandleContractOPEvent(c *lnutil.DlcContract,
 				" for type %d", c.CoinType)
 		}
 
-		var buft bytes.Buffer
-		wtt := bufio.NewWriter(&buft)
-		opEvent.Tx.Serialize(wtt)
-		wtt.Flush()	
-		
-		fmt.Printf("::%s:: HandleContractOPEvent() 1: opEvent.Tx: %x \n", os.Args[6][len(os.Args[6])-4:], buft)
-
-		fmt.Printf("::%s:: HandleContractOPEvent() 2: opEvent.Tx: %s \n", os.Args[6][len(os.Args[6])-4:], lnutil.TxToString(opEvent.Tx))
-
 		nd.OpEventTx = opEvent.Tx
 		
 		pkhIsMine := false
@@ -576,14 +565,11 @@ func (nd *LitNode) HandleContractOPEvent(c *lnutil.DlcContract,
 		myPKHPkSript := lnutil.DirectWPKHScriptFromPKH(c.OurPayoutPKH)
 		for i, out := range opEvent.Tx.TxOut {
 
-			fmt.Printf("::%s:: HandleContractOPEvent() 3: out.PkScript: %x \n", os.Args[6][len(os.Args[6])-4:], out.PkScript)
-
 			if bytes.Equal(myPKHPkSript, out.PkScript) {
 				pkhIdx = uint32(i)
 				pkhIsMine = true
 				value = out.Value
 
-				fmt.Printf("::%s:: HandleContractOPEvent() 4: MINE out.PkScript: %x \n", os.Args[6][len(os.Args[6])-4:], out.PkScript)
 			}
 		}
 

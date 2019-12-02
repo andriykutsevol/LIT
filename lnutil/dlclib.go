@@ -4,12 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"math/big"
 	"errors"
-
-	"os"
 
 	"github.com/mit-dci/lit/btcutil/chaincfg/chainhash"
 	"github.com/mit-dci/lit/crypto/koblitz"
@@ -22,8 +19,6 @@ import (
 	"github.com/mit-dci/lit/consts"
 
 )
-
-var _,_ = hex.DecodeString("")
 
 // DlcContractStatus is an enumeration containing the various statuses a
 // contract can have
@@ -666,28 +661,13 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 			return nil, err
 		}
 
-		fmt.Printf("::%s:: SettlementTx(): OraclePubkey[%d] %x \n", os.Args[6][len(os.Args[6])-4:], i, res)
-
 		oraclesSigPub = append(oraclesSigPub, res)
 
 	}
 
-	// neworaclepubkeystring := "02b24f7efcfb91f340c222638c58fd644a493a52312dd01966e07d715d4a0462de"
-
-	// decoded, _ := hex.DecodeString(neworaclepubkeystring)
-
-	// var neworaclepubkey [33]byte
-	// copy(neworaclepubkey[:], decoded[:])
-
-	// oraclesSigPub = append(oraclesSigPub, neworaclepubkey)
-
-
-
-
 	// Ours = the one we generate & sign. Theirs (ours = false) = the one they
 	// generated, so we can use their sigs
 	if ours {
-		fmt.Printf("::%s:: SettlementTx: OURS \n", os.Args[6][len(os.Args[6])-4:]) 
 		if valueTheirs > 0 {
 			tx.AddTxOut(DlcOutput(c.TheirPayoutBase, c.OurPayoutBase, oraclesSigPub, valueTheirs))
 		}
@@ -697,9 +677,6 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 		}
 
 	} else {
-
-		fmt.Printf("::%s:: SettlementTx: THEIRS \n", os.Args[6][len(os.Args[6])-4:]) 
-
 		if valueOurs > 0 {
 			tx.AddTxOut(DlcOutput(c.OurPayoutBase, c.TheirPayoutBase, oraclesSigPub, valueOurs))
 		}
@@ -781,13 +758,7 @@ func NegotiateTx(c *DlcContract) (*wire.MsgTx, error) {
 
 	DesiredOracleValue := c.DesiredOracleValue
 
-
-	fmt.Printf("::%s:: NegotiateTx(): c.DesiredOracleValue: %d \n", os.Args[6][len(os.Args[6])-4:], c.DesiredOracleValue)	
-
 	totalContractValue := c.TheirFundingAmount + c.OurFundingAmount
-
-	fmt.Printf("::%s:: NegotiateTx(): totalContractValue: %d \n", os.Args[6][len(os.Args[6])-4:], totalContractValue)
-
 
 	var valueours int64
 	
@@ -795,21 +766,12 @@ func NegotiateTx(c *DlcContract) (*wire.MsgTx, error) {
 
 		if d.OracleValue == DesiredOracleValue {
 			valueours = d.ValueOurs
-
-			fmt.Printf("::%s:: NegotiateTx(): d.OracleValue: %d \n", os.Args[6][len(os.Args[6])-4:], d.OracleValue)
-			fmt.Printf("::%s:: NegotiateTx(): d.ValueOurs: %d \n", os.Args[6][len(os.Args[6])-4:], d.ValueOurs)
-
 		}
 
 	}
 
-	fmt.Printf("::%s:: NegotiateTx(): valueours: %d \n", os.Args[6][len(os.Args[6])-4:], valueours)
-
 	// TODO. If valueours is undefinded -> ERROR
 	valueTheirs := totalContractValue - valueours
-
-	fmt.Printf("::%s:: NegotiateTx(): valueTheirs: %d \n", os.Args[6][len(os.Args[6])-4:], valueTheirs)
-	
 
 	var vsize uint32
 	if (valueours == 0) || (valueTheirs == 0){
@@ -818,11 +780,7 @@ func NegotiateTx(c *DlcContract) (*wire.MsgTx, error) {
 		vsize = 169
 	}
 
-
 	fee := int64(vsize * c.FeePerByte)
-
-	
-	fmt.Printf("::%s:: NegotiateTx(): fee: %d \n", os.Args[6][len(os.Args[6])-4:], fee)
 
 	txin := wire.NewTxIn(&c.FundingOutpoint, nil, nil)
 	txin.Sequence = 0
@@ -836,10 +794,6 @@ func NegotiateTx(c *DlcContract) (*wire.MsgTx, error) {
 		tx.AddTxOut(ourOutput)
 	}
 
-
-
-	fmt.Printf("::%s:: NegotiateTx(): valueours - fee: %d \n", os.Args[6][len(os.Args[6])-4:], valueours - fee)
-
 	// TODO: Handle like in SettlementTx
 	if valueTheirs > fee {
 		theirRefScript := DirectWPKHScriptFromPKH(c.TheirRefundPKH)
@@ -847,8 +801,6 @@ func NegotiateTx(c *DlcContract) (*wire.MsgTx, error) {
 		tx.AddTxOut(theirOutput)
 	}
 
-	fmt.Printf("::%s:: NegotiateTx(): valueTheirs - fee: %d \n", os.Args[6][len(os.Args[6])-4:], valueTheirs - fee)
-	
 	txsort.InPlaceSort(tx)
 
 	return tx, nil

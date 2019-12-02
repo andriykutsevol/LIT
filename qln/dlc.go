@@ -2,9 +2,6 @@ package qln
 
 import (
 	"fmt"
-	"os"
-	"bytes"
-	"bufio"
 	"errors"
 
 	"encoding/hex"
@@ -112,16 +109,10 @@ func (nd *LitNode) OfferDlc(peerIdx uint32, cIdx uint64) error {
 		return err
 	}
 
-	fmt.Printf("::%s:: OfferDlc(): kg.Step[2] = UseContractFundMultisig: %d \n", os.Args[6][len(os.Args[6])-4:], UseContractFundMultisig)
-	fmt.Printf("::%s:: OfferDlc(): c.OurFundMultisigPub: %x \n", os.Args[6][len(os.Args[6])-4:], c.OurFundMultisigPub) 
-
 	c.OurPayoutBase, err = nd.GetUsePub(kg, UseContractPayoutBase)
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("::%s:: OfferDlc(): kg.Step[2] = UseContractPayoutBase: %d \n", os.Args[6][len(os.Args[6])-4:], UseContractPayoutBase)
-	fmt.Printf("::%s:: OfferDlc(): c.OurPayoutBase: %x \n", os.Args[6][len(os.Args[6])-4:], c.OurPayoutBase)
 
     ourPayoutPKHKey, err := nd.GetUsePub(kg, UseContractPayoutPKH)
     if err != nil {
@@ -131,13 +122,8 @@ func (nd *LitNode) OfferDlc(peerIdx uint32, cIdx uint64) error {
         return err
 	}
 
-	fmt.Printf("::%s:: OfferDlc(): kg.Step[2] = UseContractPayoutPKH: %d \n", os.Args[6][len(os.Args[6])-4:], UseContractPayoutPKH)
-	fmt.Printf("::%s:: OfferDlc(): ourPayoutPKHKey: %x \n", os.Args[6][len(os.Args[6])-4:], ourPayoutPKHKey)
-
 	copy(c.OurPayoutPKH[:], btcutil.Hash160(ourPayoutPKHKey[:]))
 	
-	fmt.Printf("::%s:: OfferDlc(): c.OurPayoutPKH: %x \n", os.Args[6][len(os.Args[6])-4:], c.OurPayoutPKH)
-
 	// Fund the contract
 	err = nd.FundContract(c)
 	if err != nil {
@@ -230,9 +216,6 @@ func (nd *LitNode) AcceptDlc(cIdx uint64) error {
 			return
 		}
 
-		fmt.Printf("::%s:: AcceptDlc(): kg.Step[2] = UseContractFundMultisig: %d \n", os.Args[6][len(os.Args[6])-4:], UseContractFundMultisig)
-		fmt.Printf("::%s:: AcceptDlc(): c.OurFundMultisigPub: %x \n", os.Args[6][len(os.Args[6])-4:], c.OurFundMultisigPub)
-
 		c.OurPayoutBase, err = nd.GetUsePub(kg, UseContractPayoutBase)
 		if err != nil {
 			logging.Errorf("Error while getting payoutbase: %s", err.Error())
@@ -240,9 +223,6 @@ func (nd *LitNode) AcceptDlc(cIdx uint64) error {
 			nd.DlcManager.SaveContract(c)
 			return
 		}
-
-		fmt.Printf("::%s:: AcceptDlc(): kg.Step[2] = UseContractPayoutBase: %d \n", os.Args[6][len(os.Args[6])-4:], UseContractPayoutBase)
-		fmt.Printf("::%s:: AcceptDlc(): c.OurPayoutBase: %x \n", os.Args[6][len(os.Args[6])-4:], c.OurPayoutBase)
 
 		ourPayoutPKHKey, err := nd.GetUsePub(kg, UseContractPayoutPKH)
 		if err != nil {
@@ -252,12 +232,7 @@ func (nd *LitNode) AcceptDlc(cIdx uint64) error {
 			return
 		}
 
-		fmt.Printf("::%s:: AcceptDlc(): kg.Step[2] = UseContractPayoutPKH: %d \n", os.Args[6][len(os.Args[6])-4:], UseContractPayoutPKH)
-		fmt.Printf("::%s:: AcceptDlc(): ourPayoutPKHKey: %x \n", os.Args[6][len(os.Args[6])-4:], ourPayoutPKHKey)
-
 		copy(c.OurPayoutPKH[:], btcutil.Hash160(ourPayoutPKHKey[:]))
-
-		fmt.Printf("::%s:: AcceptDlc(): c.OurPayoutPKH: %x \n", os.Args[6][len(os.Args[6])-4:], c.OurPayoutPKH)
 
 		wal, _ := nd.SubWallet[c.CoinType]
 		c.OurRefundPKH, err = wal.NewAdr()
@@ -282,11 +257,6 @@ func (nd *LitNode) AcceptDlc(cIdx uint64) error {
 		kg.Step[2] = UseContractFundMultisig
 		mypriv, err := wal.GetPriv(kg)
 		
-
-		fmt.Printf("::%s:: AcceptDlc(): kg.Step[2] = UseContractFundMultisig: %d \n", os.Args[6][len(os.Args[6])-4:], UseContractFundMultisig)
-		fmt.Printf("::%s:: AcceptDlc(): priv for SignRefundTx: mypriv.D %d, mypriv.PublicKey.X: %d, mypriv.PublicKey.Y %d \n", os.Args[6][len(os.Args[6])-4:], mypriv.D, mypriv.PublicKey.X, mypriv.PublicKey.Y)		
-
-
 		err = lnutil.SignRefundTx(c, refundTx, mypriv)
 		if err != nil {
 			logging.Errorf("Error of SignRefundTx: %s", err.Error())
@@ -481,16 +451,6 @@ func (nd *LitNode) DlcContractAckHandler(msg lnutil.DlcContractAckMsg, peer *Rem
 		return
 	}
 
-	var buft bytes.Buffer
-	wtt := bufio.NewWriter(&buft)
-	tx.Serialize(wtt)
-	wtt.Flush()	
-	
-	fmt.Printf("::%s:: DlcContractAckHandler() 1: BuildDlcFundingTransaction: Tx: %x \n", os.Args[6][len(os.Args[6])-4:], buft)
-
-	fmt.Printf("::%s:: DlcContractAckHandler() 2: BuildDlcFundingTransaction: Tx: %s \n", os.Args[6][len(os.Args[6])-4:], lnutil.TxToString(&tx))
-
-
 	err = wal.SignMyInputs(&tx)
 	if err != nil {
 		logging.Errorf("DlcContractAckHandler SignMyInputs err %s\n", err.Error())
@@ -520,18 +480,6 @@ func (nd *LitNode) DlcFundingSigsHandler(msg lnutil.DlcContractFundingSigsMsg, p
 
 	wal.SignMyInputs(msg.SignedFundingTx)
 	wal.DirectSendTx(msg.SignedFundingTx)
-
-	var buft bytes.Buffer
-	wtt := bufio.NewWriter(&buft)
-	msg.SignedFundingTx.Serialize(wtt)
-	wtt.Flush()	
-	
-	fmt.Printf("::%s:: DlcFundingSigsHandler() 1: DirectSendTx(msg.SignedFundingTx): Tx: %x \n", os.Args[6][len(os.Args[6])-4:], buft)
-
-	fmt.Printf("::%s:: DlcFundingSigsHandler() 2: DirectSendTx(msg.SignedFundingTx): Tx: %s \n", os.Args[6][len(os.Args[6])-4:], lnutil.TxToString(msg.SignedFundingTx))
-
-
-
 
 	err = wal.WatchThis(c.FundingOutpoint)
 	if err != nil {
@@ -598,25 +546,10 @@ func (nd *LitNode) SignSettlementDivisions(c *lnutil.DlcContract) ([]lnutil.DlcC
 		return nil, fmt.Errorf("Could not get private key for contract %d", c.Idx)
 	}
 
-    fmt.Printf("::%s:: SignSettlementDivisions(): kg.Step[2] = UseContractFundMultisig: %d \n", os.Args[6][len(os.Args[6])-4:], UseContractFundMultisig)
-    fmt.Printf("::%s:: SignSettlementDivisions(): priv for SignSettlementTx: priv.D %d, mpriv.PublicKey.X: %d, priv.PublicKey.Y %d \n", os.Args[6][len(os.Args[6])-4:], priv.D, priv.PublicKey.X, priv.PublicKey.Y)		
-
-
 	fundingTx, err := nd.BuildDlcFundingTransaction(c)
 	if err != nil {
 		return nil, err
 	}
-
-
-	var buft bytes.Buffer
-	wtt := bufio.NewWriter(&buft)
-	fundingTx.Serialize(wtt)
-	wtt.Flush()	
-	
-	fmt.Printf("::%s:: SignSettlementDivisions() 1: BuildDlcFundingTransaction: Tx: %x \n", os.Args[6][len(os.Args[6])-4:], buft)
-
-	fmt.Printf("::%s:: SignSettlementDivisions() 2: BuildDlcFundingTransaction: Tx: %s \n", os.Args[6][len(os.Args[6])-4:], fundingTx)	
-
 
 	c.FundingOutpoint = wire.OutPoint{Hash: fundingTx.TxHash(), Index: 0}
 
@@ -627,25 +560,12 @@ func (nd *LitNode) SignSettlementDivisions(c *lnutil.DlcContract) ([]lnutil.DlcC
 			return nil, err
 		}
 
-
-		var buft bytes.Buffer
-		wtt := bufio.NewWriter(&buft)
-		tx.Serialize(wtt)
-		wtt.Flush()	
-		
-		fmt.Printf("::%s:: SignSettlementDivisions(): SettlementTx  %x \n", os.Args[6][len(os.Args[6])-4:], buft)
-		
-		fmt.Printf("::%s:: SignSettlementDivisions(): SettlementTx  %s \n", os.Args[6][len(os.Args[6])-4:], lnutil.TxToString(tx))
-
-
 		sig, err := nd.SignSettlementTx(c, tx, priv)
 		if err != nil {
 			return nil, err
 		}
 		returnValue[i].Outcome = d.OracleValue
 		returnValue[i].Signature = sig
-
-		fmt.Printf("::%s:: SignSettlementDivisions(): d.OracleValue: %d, SIG: %x \n", os.Args[6][len(os.Args[6])-4:], d.OracleValue, sig)
 
 	}
 
@@ -794,51 +714,24 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 		return [32]byte{}, [32]byte{}, fmt.Errorf("SettleContract Could not get private key for contract %d", c.Idx)
 	}
 
-    fmt.Printf("::%s:: SettleContract(): kg.Step[2] = UseContractFundMultisig: %d \n", os.Args[6][len(os.Args[6])-4:], UseContractPayoutPKH)
-    fmt.Printf("::%s:: SettleContract(): priv for SignSettlementTx: mypriv.D %d, mypriv.PublicKey.X: %d, mypriv.PublicKey.Y %d \n", os.Args[6][len(os.Args[6])-4:], priv.D, priv.PublicKey.X, priv.PublicKey.Y)
-
-
-	var buft bytes.Buffer
-	wtt := bufio.NewWriter(&buft)
-
 	settleTx, err := lnutil.SettlementTx(c, *d, false)
 	if err != nil {
 		logging.Errorf("SettleContract SettlementTx err %s\n", err.Error())
 		return [32]byte{}, [32]byte{}, err
 	}
 
-	buft.Reset()
-	settleTx.Serialize(wtt)
-	wtt.Flush()	
-	
-	fmt.Printf("::%s:: SettleContract() 0.1: settleTx: %x \n", os.Args[6][len(os.Args[6])-4:], buft)
-
-	fmt.Printf("::%s:: SettleContract() 0.2: settleTx: %s \n", os.Args[6][len(os.Args[6])-4:], lnutil.TxToString(settleTx))	
 
 	mySig, err := nd.SignSettlementTx(c, settleTx, priv)
 	if err != nil {
 		logging.Errorf("SettleContract SignSettlementTx err %s", err.Error())
 		return [32]byte{}, [32]byte{}, err
 	}
-
-
-	buft.Reset()
-	settleTx.Serialize(wtt)
-	wtt.Flush()	
 	
-	fmt.Printf("::%s:: SettleContract() 0.3: settleTx: %x \n", os.Args[6][len(os.Args[6])-4:], buft)
-
-	fmt.Printf("::%s:: SettleContract() 0.4: settleTx: %s \n", os.Args[6][len(os.Args[6])-4:], lnutil.TxToString(settleTx))		
 
 	myBigSig := sig64.SigDecompress(mySig)
-
-	fmt.Printf("::%s:: SettleContract() 0.5: myBigSig: %x \n", os.Args[6][len(os.Args[6])-4:], myBigSig)
 	
-
 	theirSig, err := c.GetTheirSettlementSignature(oracleValue)
 	theirBigSig := sig64.SigDecompress(theirSig)
-
-	fmt.Printf("::%s:: SettleContract() 0.6: theirBigSig: %x \n", os.Args[6][len(os.Args[6])-4:], theirBigSig)
 
 	// put the sighash all byte on the end of both signatures
 	myBigSig = append(myBigSig, byte(txscript.SigHashAll))
@@ -864,16 +757,6 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 		logging.Errorf("SettleContract DirectSendTx (settle) err %s", err.Error())
 		return [32]byte{}, [32]byte{}, err
 	}
-
-
-	buft.Reset()
-	settleTx.Serialize(wtt)
-	wtt.Flush()	
-	
-	fmt.Printf("::%s:: SettleContract() 1: settleTx: %x \n", os.Args[6][len(os.Args[6])-4:], buft)
-
-	fmt.Printf("::%s:: SettleContract() 2: settleTx: %s \n", os.Args[6][len(os.Args[6])-4:], lnutil.TxToString(settleTx))
-
 
 	//===========================================
 	// Claim TX
@@ -913,9 +796,7 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 
 
 		var pubOracleBytes [][33]byte
-
-		fmt.Printf("::%s:: SettleContract(): ClaimTx: oraclesSig[0] %x \n", os.Args[6][len(os.Args[6])-4:], oraclesSig[0])	
-
+	
 		privOracle0, pubOracle0 := koblitz.PrivKeyFromBytes(koblitz.S256(), oraclesSig[0][:])
 		privContractOutput := lnutil.CombinePrivateKeys(privSpend, privOracle0)
 
@@ -927,8 +808,6 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 
 			privOracle, pubOracle := koblitz.PrivKeyFromBytes(koblitz.S256(), oraclesSig[i][:])
 
-			fmt.Printf("::%s:: SettleContract(): ClaimTx: oraclesSig[%d] %x \n", os.Args[6][len(os.Args[6])-4:], i, oraclesSig[i])
-
 			privContractOutput = lnutil.CombinePrivateKeys(privContractOutput, privOracle)
 
 			var pubOracleBytes1 [33]byte
@@ -936,18 +815,6 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 			pubOracleBytes = append(pubOracleBytes, pubOracleBytes1)
 
 		}
-
-
-		// neworaclesigstring := "3d8ad3c300c6ea89fb9357a4f6b8188399be4e1f5dcf871551a3099fccf89da3"
-
-		// decoded, _ := hex.DecodeString(neworaclesigstring)
-	
-		// var neworaclesig [33]byte
-		// copy(neworaclesig[:], decoded[:])
-	
-		// pubOracleBytes = append(pubOracleBytes, neworaclesig)
-
-		
 
 		settleScript := lnutil.DlcCommitScript(c.OurPayoutBase, c.TheirPayoutBase, pubOracleBytes , 5)
 		err = nd.SignClaimTx(txClaim, settleTx.TxOut[0].Value, settleScript, privContractOutput, false)
@@ -962,20 +829,6 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 			logging.Errorf("SettleContract DirectSendTx (claim) err %s", err.Error())
 			return [32]byte{}, [32]byte{}, err
 		}
-
-
-		var buf bytes.Buffer
-		wt := bufio.NewWriter(&buf)
-		txClaim.Serialize(wt)
-		wt.Flush()	
-		
-		fmt.Printf("::%s:: ClaimTx() 1: txClaim: %x \n", os.Args[6][len(os.Args[6])-4:], buf)
-
-		fmt.Printf("::%s:: ClaimTx() 2: txClaim: %s \n", os.Args[6][len(os.Args[6])-4:], lnutil.TxToString(txClaim))
-
-
-
-		
 
 		c.Status = lnutil.ContractStatusClosed
 		err = nd.DlcManager.SaveContract(c)
@@ -1071,7 +924,6 @@ func (nd *LitNode) DlcNegotiateContract(cIdx uint64, DesiredOracleValue int64) e
 	wal, _ := nd.SubWallet[c.CoinType]
 	priv, err := wal.GetPriv(kg)
 
-	fmt.Printf("::%s:: SignNegotiateTx() %x \n", os.Args[6][len(os.Args[6])-4:])
 	err = lnutil.SignNegotiateTx(c, negotiateTx, priv)
 	if err != nil {
 		logging.Errorf("Error of SignRefundTx: %s", err.Error())
@@ -1111,11 +963,7 @@ func (nd *LitNode) DlcNegotiateContractHandler(msg lnutil.DlcContractNegotiateMs
 	if err != nil {
 		logging.Errorf("DlcFundingSigsHandler FindContract err %s\n", err.Error())
 		return err
-	}
-
-	fmt.Printf("::%s:: DlcNegotiateContractHandler(): lnutil.DlcContractNegotiateMsg %+v \n", os.Args[6][len(os.Args[6])-4:], msg)
-
-	fmt.Printf("::%s:: DlcNegotiateContractHandler(): lnutil.DlcContractNegotiateMsg %+v \n", os.Args[6][len(os.Args[6])-4:], msg)	
+	}	
 
 	c.TheirnegotiateTxSig64 = msg.OurnegotiateTxSig64
 
@@ -1146,13 +994,6 @@ func (nd *LitNode) DlcNegotiateContractHandler(msg lnutil.DlcContractNegotiateMs
 	// always sighash all
 	hash := txscript.CalcWitnessSignatureHash(parsed, hCache, txscript.SigHashAll, negotiateTx, 0, c.OurFundingAmount+c.TheirFundingAmount)
 
-	fmt.Printf("::%s:: DlcNegotiateContractHandler(): c.TheirFundMultisigPub %x \n", os.Args[6][len(os.Args[6])-4:], c.TheirFundMultisigPub)
-
-	fmt.Printf("::%s:: DlcNegotiateContractHandler(): c.TheirnegotiateTxSig64 %x \n", os.Args[6][len(os.Args[6])-4:], c.TheirnegotiateTxSig64)
-
-	fmt.Printf("::%s:: DlcNegotiateContractHandler(): theirBigSig %x \n", os.Args[6][len(os.Args[6])-4:], theirBigSig)
-
-
 	theirparsedPubKey, parsepuberr := koblitz.ParsePubKey(c.TheirFundMultisigPub[:], koblitz.S256())
 	if parsepuberr != nil {
 		logging.Errorf("DlcFundingSigsHandler err %s\n", parsepuberr.Error())
@@ -1176,32 +1017,11 @@ func (nd *LitNode) DlcNegotiateContractHandler(msg lnutil.DlcContractNegotiateMs
 
 	//-------------------------
 
-	
-
 	err = nd.DlcManager.SaveContract(c)
 	if err != nil {
 		logging.Errorf("DlcNegotiateContractHandler SaveContract err %s\n", err.Error())
 		return err
 	}
-
-
-	fmt.Printf("::%s:: DlcNegotiateContractHandler(): c: %+v \n", os.Args[6][len(os.Args[6])-4:], c)
-
-	cx, err := nd.DlcManager.LoadContract(msg.Idx)
-	if err != nil {
-		logging.Errorf("DlcFundingSigsHandler FindContract err %s\n", err.Error())
-		return err
-	}
-
-	fmt.Printf("::%s:: DlcNegotiateContractHandler(): cx: %+v \n", os.Args[6][len(os.Args[6])-4:], cx)
-
-
-
-	err = nd.DlcManager.SaveContract(c)
-	if err != nil {
-		logging.Errorf("DlcNegotiateContractHandler SaveContract err %s\n", err.Error())
-		return err
-	}	
 
 
 	return nil	
@@ -1217,10 +1037,6 @@ func (nd *LitNode) DlcAcceptNegotiate(cIdx uint64) error {
 		return err
 	}
 
-	fmt.Printf("::%s:: AcceptNegotiateDlc(): c: %+v \n", os.Args[6][len(os.Args[6])-4:], c)
-
-	fmt.Printf("::%s:: AcceptNegotiateDlc(): c.DesiredOracleValue: %d \n", os.Args[6][len(os.Args[6])-4:], c.DesiredOracleValue)	
-	
 	if c.Status != lnutil.ContractStatusNegotiatingToMe {
 		return fmt.Errorf("You cannot accept negotiate a contract unless it is in the 'Negotiating to me' state")
 	}
@@ -1245,7 +1061,6 @@ func (nd *LitNode) DlcAcceptNegotiate(cIdx uint64) error {
 	wal, _ := nd.SubWallet[c.CoinType]
 	priv, err := wal.GetPriv(kg)
 
-	fmt.Printf("::%s:: SignNegotiateTx() %x \n", os.Args[6][len(os.Args[6])-4:])
 	err = lnutil.SignNegotiateTx(c, negotiateTx, priv)
 	if err != nil {
 		logging.Errorf("Error of SignRefundTx: %s", err.Error())
@@ -1268,8 +1083,6 @@ func (nd *LitNode) DlcAcceptNegotiate(cIdx uint64) error {
 	} else {
 		negotiateTx.TxIn[0].Witness = SpendMultiSigWitStack(pre, myBigSig, theirBigSig)
 	}	
-
-	fmt.Printf("::%s:: AcceptNegotiateDlc() 2: negotiateTx: %s \n", os.Args[6][len(os.Args[6])-4:], lnutil.TxToString(negotiateTx))	
 
 	err = wal.DirectSendTx(negotiateTx)
 
@@ -1297,8 +1110,6 @@ func (nd *LitNode) DlcAcceptNegotiateAck(msg lnutil.DlcContractAcceptNegotiateMs
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("::%s:: DlcAcceptNegotiateAck() msg: %+v \n", os.Args[6][len(os.Args[6])-4:], msg)
 
 	c.Status = lnutil.ContractStatusNegotiatedByMe
 
@@ -1342,10 +1153,6 @@ func (nd *LitNode) DlcDeclineNegotiate(cIdx uint64) error {
 		return err
 	}
 
-
-	fmt.Printf("::%s:: DlcDeclineNegotiate() \n", os.Args[6][len(os.Args[6])-4:])
-
-
 	// Send ACK
 	outMsg := lnutil.NewDlcContractDeclineNegotiateMsg(c)
 	nd.tmpSendLitMsg(outMsg)
@@ -1362,9 +1169,6 @@ func (nd *LitNode) DlcDeclineNegotiateAck(msg lnutil.DlcContractDeclineNegotiate
 	if err != nil {
 		return err
 	}	
-
-	fmt.Printf("::%s:: DlcDeclineNegotiateAck() \n", os.Args[6][len(os.Args[6])-4:])
-
 
 	c.Status = lnutil.ContractStatusNegotiateDeclinedByHim
 
