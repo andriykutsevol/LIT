@@ -149,9 +149,17 @@ def run_t(env, params):
             "R":"0211d753e043685ab252c81e7cf7710e0843aff0a51d3ac25238e40b3d78fde6be",
             "sig":"eb1b53a62356ae513d6ec614abde63ca1b2e819ef7dddd1c14fd2a53fd4cbd17"})
 
+        myoracles.append(
+            {"oidx": 2,
+            "datasourceId": 1,
+            "A":"027ac47e9f43cdf88f03a99a5e6442ae826d0a31b58a0be45d3852bdebd7fe8298",
+            "R":"02beba6022901e59d74b2aab41574638fa697cd58e172ef7aa9c379e600da130dd",
+            "sig":"809de4080b8cedd2ab92e57e7b92d0db1747a4703284fe4a469af8f97a48062e"})
+
+
 
         for oracle in myoracles:
-
+    
             print("opk: ", oracle["A"])
 
             oracles_pubkey.append(oracle["A"])
@@ -618,7 +626,7 @@ def t_11_0(env):
 
     #-----------------------------
 
-    oracles_number = 1
+    oracles_number = 2
     oracle_value = 11
     node_to_settle = 0
 
