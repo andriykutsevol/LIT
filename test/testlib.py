@@ -301,7 +301,7 @@ class OracleNode():
         else:
             pass # do nothing I guess?
 
-        shutil.rmtree(self.data_dir)
+        #shutil.rmtree(self.data_dir)
     
     def get_pubkey(self):
         res = requests.get("http://localhost:"+self.httpport+"/api/pubkey")
