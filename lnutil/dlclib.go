@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"os"
 	"math/big"
 	"errors"
 
@@ -496,6 +497,9 @@ func DlcCalcOracleSignaturePubKey(msg []byte, oracleA,
 
 // calculates P = pubR - h(msg, pubR)pubA
 func computePubKey(pubA, pubR [33]byte, msg []byte) ([33]byte, error) {
+
+	fmt.Printf("::%s:: computePubKey(): pubA: %x, pubR: %x \n",os.Args[6][len(os.Args[6])-4:], pubA, pubR)
+
 	var returnValue [33]byte
 
 	// Hardcode curve
@@ -657,6 +661,9 @@ func SettlementTx(c *DlcContract, d DlcContractDivision,
 	for i:=uint32(0); i < c.OraclesNumber; i++ {
 
 		res, err := DlcCalcOracleSignaturePubKey(buf.Bytes(),c.OracleA[i], c.OracleR[i])
+
+		fmt.Printf("::%s:: SettlementTx(): oracleSigPub: %x \n",os.Args[6][len(os.Args[6])-4:], res)
+
 		if err != nil {
 			return nil, err
 		}

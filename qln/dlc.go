@@ -2,6 +2,7 @@ package qln
 
 import (
 	"fmt"
+	"os"
 	"errors"
 
 	"encoding/hex"
@@ -800,6 +801,8 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 		privOracle0, pubOracle0 := koblitz.PrivKeyFromBytes(koblitz.S256(), oraclesSig[0][:])
 		privContractOutput := lnutil.CombinePrivateKeys(privSpend, privOracle0)
 
+		fmt.Printf("::%s:: SettleContract(): oraclesSig: %x, privOracle0: %x, pubOracle0: %x \n",os.Args[6][len(os.Args[6])-4:], oraclesSig[0][:], privOracle0, pubOracle0)
+
 		var pubOracleBytes0 [33]byte
 		copy(pubOracleBytes0[:], pubOracle0.SerializeCompressed())		
 		pubOracleBytes = append(pubOracleBytes, pubOracleBytes0)
@@ -807,6 +810,8 @@ func (nd *LitNode) SettleContract(cIdx uint64, oracleValue int64, oraclesSig[con
 		for i:=uint32(1); i < c.OraclesNumber; i++ {
 
 			privOracle, pubOracle := koblitz.PrivKeyFromBytes(koblitz.S256(), oraclesSig[i][:])
+
+			fmt.Printf("::%s:: SettleContract(): oraclesSig[i][:]: %x, privOracle: %x, pubOracle: %x \n",os.Args[6][len(os.Args[6])-4:], oraclesSig[i][:], privOracle, pubOracle)
 
 			privContractOutput = lnutil.CombinePrivateKeys(privContractOutput, privOracle)
 

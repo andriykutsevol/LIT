@@ -141,18 +141,46 @@ def run_t(env, params):
         oidxs = []
         datasources = []
 
-        for oracle in oracles:
-            opk = json.loads(oracle.get_pubkey())
+        myoracles = []
+        myoracles.append(
+            {"oidx": 1,
+            "datasourceId": 1,
+            "A":"024d389c5d1dd807d81ab3d9760afbf94160d6c3ea554767847ec6ea70cdf89a2d",
+            "R":"0211d753e043685ab252c81e7cf7710e0843aff0a51d3ac25238e40b3d78fde6be",
+            "sig":"eb1b53a62356ae513d6ec614abde63ca1b2e819ef7dddd1c14fd2a53fd4cbd17"})
 
-            print("opk: ", opk)
 
-            oracles_pubkey.append(opk)
+        for oracle in myoracles:
 
-            oidx = lit1.rpc.AddOracle(Key=opk["A"], Name=opk["A"])["Oracle"]["Idx"]
-            oidxs.append(oidx)
-            lit2.rpc.AddOracle(Key=opk["A"], Name=opk["A"])["Oracle"]["Idx"]
+            print("opk: ", oracle["A"])
 
-            datasources.append(json.loads(oracle.get_datasources()))
+            oracles_pubkey.append(oracle["A"])
+
+            lit1.rpc.AddOracle(Key=oracle["A"], Name=oracle["A"])
+
+            print("oidx: ", oracle["oidx"])
+
+            oidxs.append(oracle["oidx"])
+            lit2.rpc.AddOracle(Key=oracle["A"], Name=oracle["A"])
+
+            datasources.append({"id":oracle["datasourceId"]})
+
+
+        # for oracle in oracles:
+        #     opk = json.loads(oracle.get_pubkey())
+
+        #     print("opk: ", opk)
+
+        #     oracles_pubkey.append(opk)
+
+        #     oidx = lit1.rpc.AddOracle(Key=opk["A"], Name=opk["A"])["Oracle"]["Idx"]
+
+        #     print("oidx: ", oidx)
+
+        #     oidxs.append(oidx)
+        #     lit2.rpc.AddOracle(Key=opk["A"], Name=opk["A"])["Oracle"]["Idx"]
+
+        #     datasources.append(json.loads(oracle.get_datasources()))
 
 
         #------------
@@ -195,16 +223,34 @@ def run_t(env, params):
         res = lit1.rpc.ListContracts()
         assert res["Contracts"][contract["Contract"]["Idx"] - 1]["OracleTimestamp"] == settlement_time, "SetContractSettlementTime does not match settlement_time"
 
-
         decode_hex = codecs.getdecoder("hex_codec")
         brpoints = []
         rpoints = []
-        for oracle, datasource in zip(oracles, datasources):
-            res = oracle.get_rpoint(datasource[0]["id"], settlement_time)
-            b_RPoint = decode_hex(json.loads(res)['R'])[0]
+        for oracle in myoracles:
+            b_RPoint = decode_hex(oracle["R"])[0]
             RPoint = [elem for elem in b_RPoint]
+            print("TEST: brpoint: ", RPoint)
+            print("TEST: rpoint: ", oracle["R"])
+            print("TEST: datasource", oracle["datasourceId"])
             brpoints.append(RPoint)
-            rpoints.append(res)
+            rpoints.append(oracle["R"])
+
+
+
+
+
+        # decode_hex = codecs.getdecoder("hex_codec")
+        # brpoints = []
+        # rpoints = []
+        # for oracle, datasource in zip(oracles, datasources):
+        #     res = oracle.get_rpoint(datasource[0]["id"], settlement_time)
+        #     b_RPoint = decode_hex(json.loads(res)['R'])[0]
+        #     RPoint = [elem for elem in b_RPoint]
+        #     print("TEST: brpoint: ", RPoint)
+        #     print("TEST: rpoint: ", res)
+        #     print("TEST: datasource", datasource)
+        #     brpoints.append(RPoint)
+        #     rpoints.append(res)
 
 
         res = lit1.rpc.SetContractRPoint(CIdx=contract["Contract"]["Idx"], RPoint=brpoints)
@@ -286,43 +332,54 @@ def run_t(env, params):
         OraclesSig = []
         OraclesVal = []
 
-        i = 0
-        while True:
 
-            publications_result = []
-
-            for o, r in zip(oracles, rpoints):
-                publications_result.append(o.get_publication(json.loads(r)['R']))
+        for oracle in myoracles:
 
 
-            time.sleep(5)
-            i += 1
-            if i>4:
-                assert False, "Error: Oracle does not publish data"
+            b_OracleSig = decode_hex(oracle["sig"])[0]
+            OracleSig = [elem for elem in b_OracleSig]
+            OraclesSig.append(OracleSig)
+            OraclesVal.append(oracle_value)
+
+        # i = 0
+        # while True:
+
+        #     publications_result = []
+
+        #     for o, r in zip(oracles, rpoints):
+        #         pub = o.get_publication(json.loads(r)['R'])
+        #         print("TEST: pub: ", pub)
+        #         publications_result.append(pub)
+
+
+        #     time.sleep(5)
+        #     i += 1
+        #     if i>4:
+        #         assert False, "Error: Oracle does not publish data"
             
-            try:
+        #     try:
 
-                for pr in publications_result:
-                    oracle_val = json.loads(pr)["value"]
-                    OraclesVal.append(oracle_val)
-                    oracle_sig = json.loads(pr)["signature"]
-                    b_OracleSig = decode_hex(oracle_sig)[0]
-                    OracleSig = [elem for elem in b_OracleSig]
-                    OraclesSig.append(OracleSig)                        
+        #         for pr in publications_result:
+        #             oracle_val = json.loads(pr)["value"]
+        #             OraclesVal.append(oracle_val)
+        #             oracle_sig = json.loads(pr)["signature"]
+        #             b_OracleSig = decode_hex(oracle_sig)[0]
+        #             OracleSig = [elem for elem in b_OracleSig]
+        #             OraclesSig.append(OracleSig)                        
 
-                break
-            except BaseException as e:
-                print(e)
-                next
+        #         break
+        #     except BaseException as e:
+        #         print(e)
+        #         next
 
-        # Oracles have to publish the same value
-        vEqual = True
-        nTemp = OraclesVal[0]
-        for v in OraclesVal:
-            if nTemp != v:
-                vEqual = False
-                break;
-        assert vEqual, "Oracles publish different values"      
+        # # Oracles have to publish the same value
+        # vEqual = True
+        # nTemp = OraclesVal[0]
+        # for v in OraclesVal:
+        #     if nTemp != v:
+        #         vEqual = False
+        #         break;
+        # assert vEqual, "Oracles publish different values"      
 
         res = env.lits[node_to_settle].rpc.SettleContract(CIdx=contract["Contract"]["Idx"], OracleValue=OraclesVal[0], OracleSig=OraclesSig)
         assert res["Success"], "SettleContract does not works."
@@ -459,6 +516,15 @@ def run_t(env, params):
         elif node_to_settle == 1:
             assert bal1sum == lit2_bal_result, "The resulting lit1 node balance does not match." 
             assert bal2sum == lit1_bal_result, "The resulting lit2 node balance does not match." 
+
+
+
+
+
+        #======================================================================================
+
+
+
 
 
 
