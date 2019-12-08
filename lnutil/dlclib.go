@@ -523,7 +523,7 @@ func computePubKey(pubA, pubR [33]byte, msg []byte) ([33]byte, error) {
 	}
 
 	// e * B
-	A.X, A.Y = curve.ScalarMult(A.X, A.Y, e)
+	//A.X, A.Y = curve.ScalarMult(A.X, A.Y, e)
 
 	A.Y.Neg(A.Y)
 
