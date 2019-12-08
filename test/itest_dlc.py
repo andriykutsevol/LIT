@@ -143,6 +143,9 @@ def run_t(env, params):
 
         for oracle in oracles:
             opk = json.loads(oracle.get_pubkey())
+
+            print("opk: ", opk)
+
             oracles_pubkey.append(opk)
 
             oidx = lit1.rpc.AddOracle(Key=opk["A"], Name=opk["A"])["Oracle"]["Idx"]
