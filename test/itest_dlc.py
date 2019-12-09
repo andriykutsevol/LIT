@@ -157,6 +157,14 @@ def run_t(env, params):
             "sig":"809de4080b8cedd2ab92e57e7b92d0db1747a4703284fe4a469af8f97a48062e"})
 
 
+        myoracles.append(
+            {"oidx": 3,
+            "datasourceId": 1,
+            "A":"02e2fbc4d782dddc2d24929b9dbbbfec4ec2bafb72c62ec7fb3e88264d4f04ad0b",
+            "R":"029df704e97d0cc6603baac20de76b6bb006a87ef0c6ce519b9aaac00ef5a0f739",
+            "sig":"2f8bcddabf6c927892ccfe424dea125ffadaa57b63d7ce43e4e4483e31876bc6"})
+
+
 
         for oracle in myoracles:
     
@@ -626,7 +634,7 @@ def t_11_0(env):
 
     #-----------------------------
 
-    oracles_number = 2
+    oracles_number = 3
     oracle_value = 11
     node_to_settle = 0
 
