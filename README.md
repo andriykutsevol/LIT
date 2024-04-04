@@ -21,9 +21,10 @@ she can cause it to execute in an arbitrary fashion withouth revealing her priva
 This is detectable, and the defrauded party Bob can provide a compact proof of the fraud so that all other 
 users can stop using Olivia’s commitments and signatures:
 
-
-  "publishedTX = lit2.rpc.GetLatestTx(CIdx=1)"
-  "msg = lit2.rpc.GetMessageFromTx(CIdx=1, Tx=str(publishedTX["Tx"]))"
+```
+  publishedTX = lit2.rpc.GetLatestTx(CIdx=1)
+  msg = lit2.rpc.GetMessageFromTx(CIdx=1, Tx=str(publishedTX["Tx"]))
+```
 
 "proofOfMsg = lit2.rpc.CompactProofOfMsg(
 OracleValue=msg["OracleValue"],
