@@ -36,7 +36,7 @@ OurPayoutBase=msg["OurPayoutBase"], Tx=publishedTX["Tx"])
 ```
 
 
-**https://github.com/mit-dci/lit/pull/466**
+**DLC multiple oracles support added. #466**
 
 DLC multiple oracles support added.
 
