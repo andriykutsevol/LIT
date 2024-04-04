@@ -24,9 +24,8 @@ users can stop using Olivia’s commitments and signatures:
 ```
   publishedTX = lit2.rpc.GetLatestTx(CIdx=1)
   msg = lit2.rpc.GetMessageFromTx(CIdx=1, Tx=str(publishedTX["Tx"]))
-```
 
-"proofOfMsg = lit2.rpc.CompactProofOfMsg(
+proofOfMsg = lit2.rpc.CompactProofOfMsg(
 OracleValue=msg["OracleValue"],
 ValueOurs=msg["ValueOurs"],
 ValueTheirs=msg["ValueTheirs"],
@@ -34,7 +33,7 @@ OracleA=msg["OracleA"],
 OracleR=msg["OracleR"],
 TheirPayoutBase=msg["TheirPayoutBase"],
 OurPayoutBase=msg["OurPayoutBase"], Tx=publishedTX["Tx"])
-"
+```
 
 
 **https://github.com/mit-dci/lit/pull/466**
