@@ -22,8 +22,8 @@ This is detectable, and the defrauded party Bob can provide a compact proof of t
 users can stop using Olivia’s commitments and signatures:
 
 ```
-  publishedTX = lit2.rpc.GetLatestTx(CIdx=1)
-  msg = lit2.rpc.GetMessageFromTx(CIdx=1, Tx=str(publishedTX["Tx"]))
+publishedTX = lit2.rpc.GetLatestTx(CIdx=1)
+msg = lit2.rpc.GetMessageFromTx(CIdx=1, Tx=str(publishedTX["Tx"]))
 
 proofOfMsg = lit2.rpc.CompactProofOfMsg(
 OracleValue=msg["OracleValue"],
@@ -39,3 +39,41 @@ OurPayoutBase=msg["OurPayoutBase"], Tx=publishedTX["Tx"])
 **https://github.com/mit-dci/lit/pull/466**
 
 DLC multiple oracles support added.
+
+
+**DLC Refund Transaction Created. #465**
+
+DLC Refund Transaction Created. #465
+
+**DLC Subsystem. All the stuff below + Test + Add FeePerByte to the lit-af utility. #463**
+
+Added tests for:
+
+Writing tests for the subsystem.
+Creating arbitrarily large contracts.
+Bug fixing at the ends of the interval.
+Calculate the transactions vsizes.
+Bug fixing when the counterparty runs the contract.
+
+
+**DLC Subsystem. Calculate Transactions virtual sizes. #462**
+
+Calculate Transactions virtual sizes.
+
+**DLC Subsystem. Contract settlement from counterparty works. #459**
+
+This allows you to run a contract from another node. Not from that which offers the contract.
+
+**DLC Subsystem. Fix bug at the edges of interval. #458**
+
+his PR eliminates the bug when one of the participants wins nothing and the other gets everything. Or vice versa.
+
+**https://github.com/mit-dci/lit/pull/457**
+
+This PR is to avoid Noise Protocol message size limitation (64kb).
+https://noiseprotocol.org/noise.html
+(All Noise messages are less than or equal to 65535 bytes in length.)
+
+I think that even with the optimization by 'Base and Exponent R values'
+a contract can be larger than 64kb.
+
