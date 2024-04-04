@@ -1,5 +1,5 @@
 ## It is hardened version of https://github.com/mit-dci/lit repository.
-
+## For this project I completed:
 
 **DLC negotiate contract. #471**
 From the DLC whitepaper:
