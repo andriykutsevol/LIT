@@ -1,4 +1,4 @@
-## It is hardened version of https://github.com/mit-dci/lit repository.
+## It is hardened version of https://github.com/mit-dci/lit daemon.
 ## For this project I completed:
 
 **DLC negotiate contract. #471**
